@@ -81,7 +81,7 @@ export function DayStatusModal({ date, session, hasPlan, onClose, onSaved }: Pro
           <Button className="flex-1" loading={saving} onClick={save}>Save</Button>
         </div>
 
-        {hasPlan && (
+        {(hasPlan || session) && (
           <Link
             href={`/workout/${date}`}
             className="text-center text-sm text-orange-500 font-medium hover:underline"

@@ -1,5 +1,5 @@
 'use client';
-import { use, useEffect, useState } from 'react';
+import { use } from 'react';
 import { format, parseISO } from 'date-fns';
 import Link from 'next/link';
 import { useWorkoutPlan } from '@/hooks/useWorkoutPlan';
@@ -7,6 +7,7 @@ import { useWorkoutSession } from '@/hooks/useWorkoutSession';
 import { useExercises } from '@/hooks/useExercises';
 import { WorkoutHeader } from '@/components/workout/WorkoutHeader';
 import { ExerciseCard } from '@/components/workout/ExerciseCard';
+import { OrphanedSessionExerciseCard } from '@/components/workout/OrphanedSessionExerciseCard';
 import { PageSpinner } from '@/components/ui/Spinner';
 import { Button } from '@/components/ui/Button';
 import { WorkoutPlanExercise, WorkoutSessionExercise } from '@/types';
@@ -34,6 +35,23 @@ export default function WorkoutPage({ params }: { params: Promise<{ date: string
     return sessionExercises.find(se => se.workout_plan_exercise_id === planExId) ?? null;
   }
 
+  const planExerciseIds = new Set(planExercises.map(pe => pe.id));
+  const orphanedSessionExercises = sessionExercises.filter(
+    se => !se.workout_plan_exercise_id || !planExerciseIds.has(se.workout_plan_exercise_id)
+  );
+
+  async function ensureSession(): Promise<string> {
+    if (session?.id) return session.id;
+    const resp = await fetch('/api/workout-sessions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ date, status: 'done' }),
+    });
+    const created = await resp.json();
+    await mutateSession();
+    return created.id;
+  }
+
   const displayDate = format(parseISO(date), 'EEEE, MMM d');
 
   return (
@@ -53,7 +71,7 @@ export default function WorkoutPage({ params }: { params: Promise<{ date: string
         onSessionUpdated={refresh}
       />
 
-      {planExercises.length === 0 ? (
+      {planExercises.length === 0 && orphanedSessionExercises.length === 0 ? (
         <div className="bg-white rounded-2xl border border-dashed border-slate-200 p-8 text-center">
           <p className="text-slate-400 mb-3">No workout planned for this day</p>
           <Link href="/planner">
@@ -62,9 +80,11 @@ export default function WorkoutPage({ params }: { params: Promise<{ date: string
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          <h2 className="font-semibold text-slate-700 text-sm uppercase tracking-wide">
-            Exercises ({planExercises.length})
-          </h2>
+          {planExercises.length > 0 && (
+            <h2 className="font-semibold text-slate-700 text-sm uppercase tracking-wide">
+              Exercises ({planExercises.length})
+            </h2>
+          )}
           {planExercises
             .sort((a, b) => a.order_index - b.order_index)
             .map(planEx => (
@@ -74,10 +94,23 @@ export default function WorkoutPage({ params }: { params: Promise<{ date: string
                 sessionExercise={getSessionExercise(planEx.id)}
                 allExercises={allExercises}
                 sessionId={session?.id ?? ''}
+                onEnsureSession={ensureSession}
                 onUpdated={refresh}
               />
             ))
           }
+          {orphanedSessionExercises.length > 0 && (
+            <h2 className="font-semibold text-slate-700 text-sm uppercase tracking-wide mt-2">
+              Past exercises
+            </h2>
+          )}
+          {orphanedSessionExercises.map(se => (
+            <OrphanedSessionExerciseCard
+              key={se.id}
+              sessionExercise={se}
+              onUpdated={refresh}
+            />
+          ))}
         </div>
       )}
     </div>

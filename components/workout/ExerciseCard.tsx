@@ -12,6 +12,7 @@ interface Props {
   sessionExercise: WorkoutSessionExercise | null;
   allExercises: Exercise[];
   sessionId: string;
+  onEnsureSession: () => Promise<string>;
   onUpdated: () => void;
 }
 
@@ -21,7 +22,7 @@ const STATUS_CONFIG: Record<ExerciseStatus, { label: string; color: 'green' | 'r
   replaced: { label: 'Replaced', color: 'yellow', emoji: '↔' },
 };
 
-export function ExerciseCard({ planExercise, sessionExercise, allExercises, sessionId, onUpdated }: Props) {
+export function ExerciseCard({ planExercise, sessionExercise, allExercises, sessionId, onEnsureSession, onUpdated }: Props) {
   const [showPicker, setShowPicker] = useState(false);
   const [localWeight, setLocalWeight] = useState(sessionExercise?.actual_weight?.toString() ?? '');
   const [localObs, setLocalObs] = useState(sessionExercise?.observations ?? '');
@@ -34,26 +35,24 @@ export function ExerciseCard({ planExercise, sessionExercise, allExercises, sess
   const displayExercise = replacedExercise ?? exercise;
 
   async function upsertSessionExercise(patch: Partial<WorkoutSessionExercise>) {
-    const body = sessionExercise
-      ? { ...patch }
-      : {
-          workout_session_id: sessionId,
-          workout_plan_exercise_id: planExercise.id,
-          exercise_id: planExercise.exercise_id,
-          order_index: planExercise.order_index,
-          sets: planExercise.sets,
-          reps: planExercise.reps,
-          ...patch,
-        };
-
     if (sessionExercise) {
       await fetch(`/api/workout-sessions/${sessionId}/exercises/${sessionExercise.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        body: JSON.stringify(patch),
       });
     } else {
-      await fetch(`/api/workout-sessions/${sessionId}/exercises`, {
+      const sid = sessionId || await onEnsureSession();
+      const body = {
+        workout_session_id: sid,
+        workout_plan_exercise_id: planExercise.id,
+        exercise_id: planExercise.exercise_id,
+        order_index: planExercise.order_index,
+        sets: planExercise.sets,
+        reps: planExercise.reps,
+        ...patch,
+      };
+      await fetch(`/api/workout-sessions/${sid}/exercises`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
