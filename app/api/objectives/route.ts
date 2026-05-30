@@ -1,39 +1,31 @@
 import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase-server';
+import { prisma } from '@/lib/prisma';
+import { serialize } from '@/lib/serialize';
 
 export async function GET() {
-  const db = createServerClient();
-  const { data, error } = await db
-    .from('user_objectives')
-    .select('*')
-    .limit(1)
-    .maybeSingle();
-  if (error) return Response.json({ error: error.message }, { status: 500 });
-  return Response.json(data);
+  const data = await prisma.userObjective.findFirst();
+  return Response.json(serialize(data));
 }
 
 export async function PUT(req: NextRequest) {
-  const db = createServerClient();
   const body = await req.json();
+  const existing = await prisma.userObjective.findFirst({ select: { id: true } });
 
-  const { data: existing } = await db.from('user_objectives').select('id').limit(1).maybeSingle();
+  const data = existing
+    ? await prisma.userObjective.update({
+        where: { id: existing.id },
+        data: {
+          objective_text: body.objective_text ?? null,
+          strategy_text: body.strategy_text ?? null,
+          updated_at: new Date(),
+        },
+      })
+    : await prisma.userObjective.create({
+        data: {
+          objective_text: body.objective_text ?? null,
+          strategy_text: body.strategy_text ?? null,
+        },
+      });
 
-  let result;
-  if (existing) {
-    result = await db
-      .from('user_objectives')
-      .update({ ...body, updated_at: new Date().toISOString() })
-      .eq('id', existing.id)
-      .select()
-      .single();
-  } else {
-    result = await db
-      .from('user_objectives')
-      .insert({ ...body })
-      .select()
-      .single();
-  }
-
-  if (result.error) return Response.json({ error: result.error.message }, { status: 500 });
-  return Response.json(result.data);
+  return Response.json(serialize(data));
 }

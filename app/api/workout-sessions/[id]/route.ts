@@ -1,26 +1,22 @@
 import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase-server';
+import { prisma } from '@/lib/prisma';
+import { serialize } from '@/lib/serialize';
+
+const include = {
+  exercises: {
+    include: { exercise: true, replaced_exercise: true },
+    orderBy: { order_index: 'asc' as const },
+  },
+} as const;
 
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const db = createServerClient();
-  const { data, error } = await db
-    .from('workout_sessions')
-    .select(`
-      *,
-      exercises:workout_session_exercises(
-        *,
-        exercise:exercises(*),
-        replaced_exercise:exercises!workout_session_exercises_replaced_exercise_id_fkey(*)
-      )
-    `)
-    .eq('id', id)
-    .single();
-  if (error) return Response.json({ error: error.message }, { status: 404 });
-  return Response.json(data);
+  const data = await prisma.workoutSession.findUnique({ where: { id }, include });
+  if (!data) return Response.json({ error: 'Not found' }, { status: 404 });
+  return Response.json(serialize(data));
 }
 
 export async function PUT(
@@ -28,16 +24,23 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const db = createServerClient();
   const body = await req.json();
-  const { data, error } = await db
-    .from('workout_sessions')
-    .update({ ...body, updated_at: new Date().toISOString() })
-    .eq('id', id)
-    .select()
-    .single();
-  if (error) return Response.json({ error: error.message }, { status: 500 });
-  return Response.json(data);
+  const data = await prisma.workoutSession.update({
+    where: { id },
+    data: {
+      ...(body.status !== undefined && { status: body.status }),
+      ...(body.notes !== undefined && { notes: body.notes }),
+      ...(body.actual_start_time !== undefined && {
+        actual_start_time: body.actual_start_time ? new Date(body.actual_start_time) : null,
+      }),
+      ...(body.actual_end_time !== undefined && {
+        actual_end_time: body.actual_end_time ? new Date(body.actual_end_time) : null,
+      }),
+      ...(body.workout_plan_id !== undefined && { workout_plan_id: body.workout_plan_id }),
+      updated_at: new Date(),
+    },
+  });
+  return Response.json(serialize(data));
 }
 
 export async function DELETE(
@@ -45,8 +48,6 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const db = createServerClient();
-  const { error } = await db.from('workout_sessions').delete().eq('id', id);
-  if (error) return Response.json({ error: error.message }, { status: 500 });
+  await prisma.workoutSession.delete({ where: { id } });
   return new Response(null, { status: 204 });
 }

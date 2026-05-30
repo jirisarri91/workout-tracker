@@ -1,0 +1,111 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Exercise {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String
+  instructions  String?
+  muscle_groups String[]
+  resources     Json     @default("[]")
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime @default(now()) @db.Timestamptz(6)
+
+  workout_plan_exercises    WorkoutPlanExercise[]
+  workout_session_exercises WorkoutSessionExercise[] @relation("exercise")
+  replaced_in_sessions      WorkoutSessionExercise[] @relation("replaced_exercise")
+
+  @@map("exercises")
+}
+
+model WorkoutPlan {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  date       DateTime  @unique @db.Date
+  name       String?
+  objective  String?
+  notes      String?
+  start_time DateTime? @db.Time(6)
+  end_time   DateTime? @db.Time(6)
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at DateTime  @default(now()) @db.Timestamptz(6)
+
+  exercises WorkoutPlanExercise[]
+  sessions  WorkoutSession[]
+
+  @@map("workout_plans")
+}
+
+model WorkoutPlanExercise {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  workout_plan_id  String   @db.Uuid
+  exercise_id      String   @db.Uuid
+  order_index      Int      @default(0)
+  sets             Int?
+  reps             Int?
+  duration_seconds Int?
+  target_weight    Decimal? @db.Decimal(6, 2)
+  rest_seconds     Int?
+  notes            String?
+  created_at       DateTime @default(now()) @db.Timestamptz(6)
+
+  workout_plan              WorkoutPlan              @relation(fields: [workout_plan_id], references: [id], onDelete: Cascade)
+  exercise                  Exercise                 @relation(fields: [exercise_id], references: [id], onDelete: Restrict)
+  workout_session_exercises WorkoutSessionExercise[]
+
+  @@map("workout_plan_exercises")
+}
+
+model WorkoutSession {
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  workout_plan_id   String?   @db.Uuid
+  date              DateTime  @unique @db.Date
+  status            String    @default("planned")
+  actual_start_time DateTime? @db.Timestamptz(6)
+  actual_end_time   DateTime? @db.Timestamptz(6)
+  notes             String?
+  created_at        DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime  @default(now()) @db.Timestamptz(6)
+
+  workout_plan WorkoutPlan?             @relation(fields: [workout_plan_id], references: [id], onDelete: SetNull)
+  exercises    WorkoutSessionExercise[]
+
+  @@map("workout_sessions")
+}
+
+model WorkoutSessionExercise {
+  id                       String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  workout_session_id       String   @db.Uuid
+  workout_plan_exercise_id String?  @db.Uuid
+  exercise_id              String   @db.Uuid
+  order_index              Int      @default(0)
+  status                   String   @default("done")
+  replaced_exercise_id     String?  @db.Uuid
+  sets                     Int?
+  reps                     Int?
+  actual_weight            Decimal? @db.Decimal(6, 2)
+  duration_seconds         Int?
+  observations             String?
+  created_at               DateTime @default(now()) @db.Timestamptz(6)
+  updated_at               DateTime @default(now()) @db.Timestamptz(6)
+
+  workout_session       WorkoutSession       @relation(fields: [workout_session_id], references: [id], onDelete: Cascade)
+  workout_plan_exercise WorkoutPlanExercise? @relation(fields: [workout_plan_exercise_id], references: [id], onDelete: SetNull)
+  exercise              Exercise             @relation("exercise", fields: [exercise_id], references: [id], onDelete: Restrict)
+  replaced_exercise     Exercise?            @relation("replaced_exercise", fields: [replaced_exercise_id], references: [id], onDelete: SetNull)
+
+  @@map("workout_session_exercises")
+}
+
+model UserObjective {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  objective_text String?
+  strategy_text  String?
+  updated_at     DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("user_objectives")
+}
