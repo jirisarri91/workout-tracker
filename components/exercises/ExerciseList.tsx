@@ -16,13 +16,31 @@ export function ExerciseList({ exercises, onChanged }: Props) {
   const [editTarget, setEditTarget] = useState<Exercise | null | 'new'>('new');
   const [showForm, setShowForm] = useState(false);
   const [query, setQuery] = useState('');
+  const [selectedGroups, setSelectedGroups] = useState<Set<string>>(new Set());
   const [deleting, setDeleting] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const filtered = exercises.filter(e =>
-    e.name.toLowerCase().includes(query.toLowerCase()) ||
-    e.muscle_groups?.some(m => m.toLowerCase().includes(query.toLowerCase()))
-  );
+  const allMuscleGroups = Array.from(
+    new Set(exercises.flatMap(e => e.muscle_groups ?? []))
+  ).sort();
+
+  function toggleGroup(group: string) {
+    setSelectedGroups(prev => {
+      const next = new Set(prev);
+      next.has(group) ? next.delete(group) : next.add(group);
+      return next;
+    });
+  }
+
+  const filtered = exercises.filter(e => {
+    const matchesQuery =
+      e.name.toLowerCase().includes(query.toLowerCase()) ||
+      e.muscle_groups?.some(m => m.toLowerCase().includes(query.toLowerCase()));
+    const matchesGroups =
+      selectedGroups.size === 0 ||
+      e.muscle_groups?.some(m => selectedGroups.has(m));
+    return matchesQuery && matchesGroups;
+  });
 
   async function deleteExercise(ex: Exercise) {
     if (!confirm(`Delete "${ex.name}"? This cannot be undone.`)) return;
@@ -53,6 +71,36 @@ export function ExerciseList({ exercises, onChanged }: Props) {
           + New
         </Button>
       </div>
+
+      {/* Muscle group filters */}
+      {allMuscleGroups.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {allMuscleGroups.map(group => {
+            const active = selectedGroups.has(group);
+            return (
+              <button
+                key={group}
+                onClick={() => toggleGroup(group)}
+                className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                  active
+                    ? 'bg-orange-500 border-orange-500 text-white'
+                    : 'bg-white border-slate-200 text-slate-600 hover:border-orange-300 hover:text-orange-600'
+                }`}
+              >
+                {group}
+              </button>
+            );
+          })}
+          {selectedGroups.size > 0 && (
+            <button
+              onClick={() => setSelectedGroups(new Set())}
+              className="px-3 py-1 rounded-full text-xs font-medium border border-slate-200 text-slate-400 hover:text-slate-600 transition-colors"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+      )}
 
       {/* List */}
       {filtered.map(ex => (
