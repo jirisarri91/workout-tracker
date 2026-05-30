@@ -171,6 +171,15 @@ export function PlanEditor({ date, plan, allExercises, allPlans, onSaved }: Prop
   const displayDate = format(parseISO(date), 'EEEE, MMMM d, yyyy');
   const ungroupedExercises = exercises.filter(e => !e.block_name);
 
+  const muscleGroupCounts = exercises.reduce<Record<string, number>>((acc, ex) => {
+    const exercise = ex.exercise ?? allExercises.find(e => e.id === ex.exercise_id);
+    for (const mg of exercise?.muscle_groups ?? []) {
+      acc[mg] = (acc[mg] ?? 0) + 1;
+    }
+    return acc;
+  }, {});
+  const muscleGroupEntries = Object.entries(muscleGroupCounts).sort((a, b) => b[1] - a[1]);
+
   function renderExerciseCard(ex: WorkoutPlanExercise, blockName: string | null, blockExercises: WorkoutPlanExercise[]) {
     const exercise = ex.exercise ?? allExercises.find(e => e.id === ex.exercise_id);
     const idxInBlock = blockExercises.findIndex(e => e.id === ex.id);
@@ -338,6 +347,20 @@ export function PlanEditor({ date, plan, allExercises, allPlans, onSaved }: Prop
           <span className="text-base leading-none font-medium">+</span>
           Add block
         </button>
+      )}
+
+      {muscleGroupEntries.length > 0 && (
+        <div className="bg-orange-50 rounded-2xl border border-orange-100 p-4">
+          <h3 className="text-xs font-semibold text-orange-700 uppercase tracking-wide mb-2">Muscle groups this session</h3>
+          <div className="flex flex-wrap gap-2">
+            {muscleGroupEntries.map(([mg, count]) => (
+              <div key={mg} className="flex items-center gap-1.5 bg-white rounded-full px-3 py-1 border border-orange-100 text-sm">
+                <span className="text-slate-700">{mg}</span>
+                <span className="font-semibold text-xs bg-orange-500 text-white rounded-full w-5 h-5 flex items-center justify-center">{count}</span>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
 
       <Button onClick={save} loading={saving} size="lg" className="w-full">
