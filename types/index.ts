@@ -25,6 +25,7 @@ export interface WorkoutPlanExercise {
   id: string;
   workout_plan_id: string;
   exercise_id: string;
+  block_name: string | null;
   order_index: number;
   sets: number | null;
   reps: number | null;

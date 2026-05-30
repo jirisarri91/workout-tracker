@@ -38,6 +38,7 @@ export default function PlannerPage() {
           date={selectedDate}
           plan={plan}
           allExercises={exercises}
+          allPlans={plans ?? []}
           onSaved={onSaved}
         />
       )}

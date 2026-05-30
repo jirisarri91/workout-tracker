@@ -57,6 +57,7 @@ export async function POST(req: NextRequest) {
       data: exercises.map((e: Record<string, unknown>, i: number) => ({
         workout_plan_id: plan.id,
         exercise_id: e.exercise_id as string,
+        block_name: e.block_name ?? null,
         order_index: i,
         sets: e.sets ?? null,
         reps: e.reps ?? null,

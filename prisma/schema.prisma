@@ -44,6 +44,7 @@ model WorkoutPlanExercise {
   id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   workout_plan_id  String   @db.Uuid
   exercise_id      String   @db.Uuid
+  block_name       String?
   order_index      Int      @default(0)
   sets             Int?
   reps             Int?
