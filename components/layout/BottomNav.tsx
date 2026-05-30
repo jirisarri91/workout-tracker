@@ -51,6 +51,18 @@ const navItems = [
     ),
   },
   {
+    href: '/exercises',
+    label: 'Exercises',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-6 h-6">
+        <path d="M6.5 6.5h11M6.5 12h11M6.5 17.5h11" strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx="3.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
+        <circle cx="3.5" cy="12" r="1" fill="currentColor" stroke="none" />
+        <circle cx="3.5" cy="17.5" r="1" fill="currentColor" stroke="none" />
+      </svg>
+    ),
+  },
+  {
     href: '/mesocycles',
     label: 'Blocks',
     icon: (

@@ -98,26 +98,38 @@ export default function WorkoutPage({ params }: { params: Promise<{ date: string
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          {planExercises.length > 0 && (
-            <h2 className="font-semibold text-slate-700 text-sm uppercase tracking-wide">
-              Exercises ({planExercises.length})
-            </h2>
-          )}
-          {planExercises
-            .sort((a, b) => a.order_index - b.order_index)
-            .map(planEx => (
-              <ExerciseCard
-                key={planEx.id}
-                planExercise={planEx}
-                sessionExercise={getSessionExercise(planEx.id)}
-                allExercises={allExercises}
-                sessionId={session?.id ?? ''}
-                onEnsureSession={ensureSession}
-                onUpdated={refresh}
-                suggestion={suggestions[planEx.exercise_id]}
-              />
-            ))
-          }
+          {planExercises.length > 0 && (() => {
+            const sorted = [...planExercises].sort((a, b) => a.order_index - b.order_index);
+            const blockMap = new Map<string, WorkoutPlanExercise[]>();
+            for (const ex of sorted) {
+              const key = ex.block_name ?? '';
+              if (!blockMap.has(key)) blockMap.set(key, []);
+              blockMap.get(key)!.push(ex);
+            }
+            const blocks = Array.from(blockMap.entries());
+            const hasNamedBlocks = blocks.some(([name]) => name !== '');
+            return blocks.map(([blockName, exercises]) => (
+              <div key={blockName || '__none__'} className="flex flex-col gap-3">
+                {hasNamedBlocks && blockName && (
+                  <h2 className="font-semibold text-slate-500 text-xs uppercase tracking-widest px-1 pt-1">
+                    {blockName}
+                  </h2>
+                )}
+                {exercises.map(planEx => (
+                  <ExerciseCard
+                    key={planEx.id}
+                    planExercise={planEx}
+                    sessionExercise={getSessionExercise(planEx.id)}
+                    allExercises={allExercises}
+                    sessionId={session?.id ?? ''}
+                    onEnsureSession={ensureSession}
+                    onUpdated={refresh}
+                    suggestion={suggestions[planEx.exercise_id]}
+                  />
+                ))}
+              </div>
+            ));
+          })()}
           {orphanedSessionExercises.length > 0 && (
             <h2 className="font-semibold text-slate-700 text-sm uppercase tracking-wide mt-2">
               Past exercises
