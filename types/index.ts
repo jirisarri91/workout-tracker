@@ -122,3 +122,38 @@ export interface ProgressSuggestion {
   suggestedWeight: number | null;
   lastDate: string | null;
 }
+
+export interface WorkoutTemplate {
+  id: string;
+  name: string;
+  objective: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  exercises?: WorkoutTemplateExercise[];
+}
+
+export interface WorkoutTemplateExercise {
+  id: string;
+  template_id: string;
+  exercise_id: string;
+  block_name: string | null;
+  order_index: number;
+  sets: number | null;
+  reps: number | null;
+  duration_seconds: number | null;
+  target_weight: number | null;
+  rest_seconds: number | null;
+  notes: string | null;
+  created_at: string;
+  exercise?: Exercise;
+}
+
+export interface WeeklyScheduleSlot {
+  id: string;
+  day_of_week: number;
+  template_id: string | null;
+  template?: WorkoutTemplate | null;
+  created_at: string;
+  updated_at: string;
+}

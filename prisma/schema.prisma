@@ -19,6 +19,7 @@ model Exercise {
   workout_plan_exercises    WorkoutPlanExercise[]
   workout_session_exercises WorkoutSessionExercise[] @relation("exercise")
   replaced_in_sessions      WorkoutSessionExercise[] @relation("replaced_exercise")
+  workout_template_exercises WorkoutTemplateExercise[]
 
   @@map("exercises")
 }
@@ -142,4 +143,51 @@ model AIDigest {
   created_at DateTime @default(now()) @db.Timestamptz(6)
 
   @@map("ai_digests")
+}
+
+model WorkoutTemplate {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name       String
+  objective  String?
+  notes      String?
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @db.Timestamptz(6)
+
+  exercises      WorkoutTemplateExercise[]
+  schedule_slots WeeklyScheduleSlot[]
+
+  @@map("workout_templates")
+}
+
+model WorkoutTemplateExercise {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  template_id      String   @db.Uuid
+  exercise_id      String   @db.Uuid
+  block_name       String?
+  order_index      Int      @default(0)
+  sets             Int?
+  reps             Int?
+  duration_seconds Int?
+  target_weight    Decimal? @db.Decimal(6, 2)
+  rest_seconds     Int?
+  notes            String?
+  created_at       DateTime @default(now()) @db.Timestamptz(6)
+
+  template WorkoutTemplate @relation(fields: [template_id], references: [id], onDelete: Cascade)
+  exercise Exercise        @relation(fields: [exercise_id], references: [id], onDelete: Restrict)
+
+  @@map("workout_template_exercises")
+}
+
+model WeeklyScheduleSlot {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  day_of_week Int
+  template_id String?  @db.Uuid
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime @default(now()) @db.Timestamptz(6)
+
+  template WorkoutTemplate? @relation(fields: [template_id], references: [id], onDelete: SetNull)
+
+  @@unique([day_of_week])
+  @@map("weekly_schedule_slots")
 }
