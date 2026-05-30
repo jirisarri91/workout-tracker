@@ -1,6 +1,6 @@
 'use client';
 import { useState, useRef } from 'react';
-import { Exercise, WorkoutPlanExercise, WorkoutSessionExercise, ExerciseStatus } from '@/types';
+import { Exercise, WorkoutPlanExercise, WorkoutSessionExercise, ExerciseStatus, ProgressSuggestion } from '@/types';
 import { ExerciseInstructions } from './ExerciseInstructions';
 import { ExercisePicker } from './ExercisePicker';
 import { Input, Textarea } from '@/components/ui/Input';
@@ -14,6 +14,7 @@ interface Props {
   sessionId: string;
   onEnsureSession: () => Promise<string>;
   onUpdated: () => void;
+  suggestion?: ProgressSuggestion;
 }
 
 const STATUS_CONFIG: Record<ExerciseStatus, { label: string; color: 'green' | 'red' | 'yellow'; emoji: string }> = {
@@ -22,10 +23,11 @@ const STATUS_CONFIG: Record<ExerciseStatus, { label: string; color: 'green' | 'r
   replaced: { label: 'Replaced', color: 'yellow', emoji: '↔' },
 };
 
-export function ExerciseCard({ planExercise, sessionExercise, allExercises, sessionId, onEnsureSession, onUpdated }: Props) {
+export function ExerciseCard({ planExercise, sessionExercise, allExercises, sessionId, onEnsureSession, onUpdated, suggestion }: Props) {
   const [showPicker, setShowPicker] = useState(false);
   const [localWeight, setLocalWeight] = useState(sessionExercise?.actual_weight?.toString() ?? '');
   const [localObs, setLocalObs] = useState(sessionExercise?.observations ?? '');
+  const [isPR, setIsPR] = useState(false);
   const saveTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { toast } = useToast();
 
@@ -36,11 +38,13 @@ export function ExerciseCard({ planExercise, sessionExercise, allExercises, sess
 
   async function upsertSessionExercise(patch: Partial<WorkoutSessionExercise>) {
     if (sessionExercise) {
-      await fetch(`/api/workout-sessions/${sessionId}/exercises/${sessionExercise.id}`, {
+      const res = await fetch(`/api/workout-sessions/${sessionId}/exercises/${sessionExercise.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(patch),
       });
+      const updated = await res.json();
+      if (updated.isPR) setIsPR(true);
     } else {
       const sid = sessionId || await onEnsureSession();
       const body = {
@@ -52,11 +56,13 @@ export function ExerciseCard({ planExercise, sessionExercise, allExercises, sess
         reps: planExercise.reps,
         ...patch,
       };
-      await fetch(`/api/workout-sessions/${sid}/exercises`, {
+      const res = await fetch(`/api/workout-sessions/${sid}/exercises`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
+      const created = await res.json();
+      if (created.isPR) setIsPR(true);
     }
     onUpdated();
   }
@@ -111,6 +117,9 @@ export function ExerciseCard({ planExercise, sessionExercise, allExercises, sess
             {replacedExercise && (
               <Badge color="yellow">replaces {exercise.name}</Badge>
             )}
+            {isPR && (
+              <span className="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full font-semibold">PR 🏆</span>
+            )}
             <ExerciseInstructions exercise={displayExercise} />
           </div>
         </div>
@@ -137,6 +146,14 @@ export function ExerciseCard({ planExercise, sessionExercise, allExercises, sess
           })}
         </div>
       </div>
+
+      {/* Suggestion row */}
+      {suggestion && (suggestion.lastWeight || suggestion.suggestedWeight) && (
+        <div className="px-4 pb-1 flex items-center gap-3 text-xs text-slate-400">
+          {suggestion.lastWeight && <span>Last: <span className="text-slate-600 font-medium">{suggestion.lastWeight}kg</span></span>}
+          {suggestion.suggestedWeight && <span>Suggested: <span className="text-orange-500 font-medium">{suggestion.suggestedWeight}kg</span></span>}
+        </div>
+      )}
 
       {/* Row 2: sets, reps, weights */}
       <div className="grid grid-cols-4 gap-2 px-4 pb-2 text-xs">

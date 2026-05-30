@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
   const customPrompt: string | undefined = body.prompt;
 
-  const [objective, sessions] = await Promise.all([
+  const [objective, sessions, latestWeight] = await Promise.all([
     prisma.userObjective.findFirst(),
     prisma.workoutSession.findMany({
       include: {
@@ -18,7 +18,12 @@ export async function POST(req: NextRequest) {
       orderBy: { date: 'desc' },
       take: 10,
     }),
+    prisma.weightEntry.findFirst({ orderBy: { date: 'desc' } }),
   ]);
+
+  const age = objective?.birthday
+    ? Math.floor((Date.now() - new Date(objective.birthday).getTime()) / (1000 * 60 * 60 * 24 * 365.25))
+    : null;
 
   const serializedSessions = serialize(sessions) as Array<{
     date: string;
@@ -39,6 +44,8 @@ export async function POST(req: NextRequest) {
   const userMessage = `
 ${objective ? `**My fitness goal:** ${objective.objective_text ?? 'Not set'}
 **My training strategy:** ${objective.strategy_text ?? 'Not set'}` : 'No fitness goals set yet.'}
+${age ? `**Age:** ${age} years old` : ''}
+${latestWeight ? `**Current weight:** ${Number(latestWeight.weight_kg)}kg (logged ${serialize(latestWeight.date)})` : ''}
 
 **Recent workout sessions (last ${serializedSessions.length}):**
 ${serializedSessions.map(s => `

@@ -18,8 +18,8 @@ export function SummaryCards({ plans, sessions }: Props) {
     .sort((a, b) => b.date.localeCompare(a.date))[0];
 
   const totalDone = sessions.filter(s => s.status === 'done').length;
-  const totalSkipped = sessions.filter(s => s.status === 'skipped').length;
   const streak = computeStreak(sessions);
+  const adherence = computeAdherence(plans, sessions);
 
   return (
     <div className="flex flex-col gap-3">
@@ -27,7 +27,7 @@ export function SummaryCards({ plans, sessions }: Props) {
       <div className="grid grid-cols-3 gap-3">
         <StatCard label="Workouts" value={totalDone} color="text-green-600" />
         <StatCard label="Streak" value={`${streak}🔥`} color="text-orange-500" />
-        <StatCard label="Skipped" value={totalSkipped} color="text-red-500" />
+        <StatCard label="Adherence" value={`${adherence}%`} color={adherence >= 80 ? 'text-green-600' : adherence >= 50 ? 'text-yellow-500' : 'text-red-500'} />
       </div>
 
       {/* Next workout */}
@@ -88,6 +88,16 @@ function StatCard({ label, value, color }: { label: string; value: string | numb
       <p className="text-xs text-slate-400 mt-0.5">{label}</p>
     </div>
   );
+}
+
+function computeAdherence(plans: WorkoutPlan[], sessions: WorkoutSession[]) {
+  const cutoff = format(new Date(Date.now() - 28 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd');
+  const today = format(new Date(), 'yyyy-MM-dd');
+  const plannedDates = plans.filter(p => p.date >= cutoff && p.date <= today).map(p => p.date);
+  if (!plannedDates.length) return 0;
+  const doneDates = new Set(sessions.filter(s => s.status === 'done').map(s => s.date));
+  const done = plannedDates.filter(d => doneDates.has(d)).length;
+  return Math.round((done / plannedDates.length) * 100);
 }
 
 function computeStreak(sessions: WorkoutSession[]) {

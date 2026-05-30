@@ -1,6 +1,6 @@
 import { Decimal } from '@prisma/client/runtime/client';
 
-const DATE_FIELDS = new Set(['date']);
+const DATE_FIELDS = new Set(['date', 'birthday', 'start_date', 'end_date', 'week_start']);
 const TIME_FIELDS = new Set(['start_time', 'end_time']);
 
 function serializeValue(key: string, value: unknown): unknown {

@@ -25,7 +25,21 @@ export async function PUT(
     } as any,
     include: { exercise: true, replaced_exercise: true },
   });
-  return Response.json(serialize(data));
+
+  let isPR = false;
+  if (body.actual_weight) {
+    const best = await prisma.workoutSessionExercise.findFirst({
+      where: {
+        exercise_id: data.exercise_id,
+        actual_weight: { not: null },
+        id: { not: exerciseId },
+      },
+      orderBy: { actual_weight: 'desc' },
+    });
+    isPR = !best || Number(data.actual_weight) > Number(best.actual_weight);
+  }
+
+  return Response.json({ ...serialize(data) as object, isPR });
 }
 
 export async function DELETE(

@@ -77,5 +77,48 @@ export interface UserObjectives {
   id: string;
   objective_text: string | null;
   strategy_text: string | null;
+  birthday: string | null;
   updated_at: string;
+}
+
+export interface WeightEntry {
+  id: string;
+  date: string;
+  weight_kg: number;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface Mesocycle {
+  id: string;
+  name: string;
+  start_date: string;
+  end_date: string;
+  goal: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AIDigest {
+  id: string;
+  week_start: string;
+  content: string;
+  created_at: string;
+}
+
+export interface ExerciseProgressPoint {
+  date: string;
+  weight: number | null;
+  reps: number | null;
+  sets: number | null;
+  volume: number | null;
+  isPR: boolean;
+}
+
+export interface ProgressSuggestion {
+  exerciseId: string;
+  lastWeight: number | null;
+  suggestedWeight: number | null;
+  lastDate: string | null;
 }

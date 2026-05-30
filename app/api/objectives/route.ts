@@ -11,12 +11,15 @@ export async function PUT(req: NextRequest) {
   const body = await req.json();
   const existing = await prisma.userObjective.findFirst({ select: { id: true } });
 
+  const birthday = body.birthday ? new Date(body.birthday) : null;
+
   const data = existing
     ? await prisma.userObjective.update({
         where: { id: existing.id },
         data: {
           objective_text: body.objective_text ?? null,
           strategy_text: body.strategy_text ?? null,
+          birthday: birthday !== undefined ? birthday : undefined,
           updated_at: new Date(),
         },
       })
@@ -24,6 +27,7 @@ export async function PUT(req: NextRequest) {
         data: {
           objective_text: body.objective_text ?? null,
           strategy_text: body.strategy_text ?? null,
+          birthday,
         },
       });
 

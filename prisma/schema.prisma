@@ -103,10 +103,43 @@ model WorkoutSessionExercise {
 }
 
 model UserObjective {
-  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   objective_text String?
   strategy_text  String?
-  updated_at     DateTime @default(now()) @db.Timestamptz(6)
+  birthday       DateTime? @db.Date
+  updated_at     DateTime  @default(now()) @db.Timestamptz(6)
 
   @@map("user_objectives")
+}
+
+model WeightEntry {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  date       DateTime @unique @db.Date
+  weight_kg  Decimal  @db.Decimal(5, 2)
+  notes      String?
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("weight_entries")
+}
+
+model Mesocycle {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name       String
+  start_date DateTime @db.Date
+  end_date   DateTime @db.Date
+  goal       String?
+  notes      String?
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("mesocycles")
+}
+
+model AIDigest {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  week_start DateTime @unique @db.Date
+  content    String
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("ai_digests")
 }

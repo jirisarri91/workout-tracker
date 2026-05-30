@@ -1,5 +1,5 @@
 'use client';
-import { use } from 'react';
+import { use, useEffect, useState } from 'react';
 import { format, parseISO } from 'date-fns';
 import Link from 'next/link';
 import { useWorkoutPlan } from '@/hooks/useWorkoutPlan';
@@ -8,9 +8,10 @@ import { useExercises } from '@/hooks/useExercises';
 import { WorkoutHeader } from '@/components/workout/WorkoutHeader';
 import { ExerciseCard } from '@/components/workout/ExerciseCard';
 import { OrphanedSessionExerciseCard } from '@/components/workout/OrphanedSessionExerciseCard';
+import { SessionSummary } from '@/components/workout/SessionSummary';
 import { PageSpinner } from '@/components/ui/Spinner';
 import { Button } from '@/components/ui/Button';
-import { WorkoutPlanExercise, WorkoutSessionExercise } from '@/types';
+import { WorkoutPlanExercise, WorkoutSessionExercise, ProgressSuggestion } from '@/types';
 
 export default function WorkoutPage({ params }: { params: Promise<{ date: string }> }) {
   const { date } = use(params);
@@ -18,6 +19,8 @@ export default function WorkoutPage({ params }: { params: Promise<{ date: string
   const { plan, isLoading: loadingPlan, mutate: mutatePlan } = useWorkoutPlan(date);
   const { session, isLoading: loadingSession, mutate: mutateSession } = useWorkoutSession(date);
   const { exercises: allExercises, isLoading: loadingExercises } = useExercises();
+  const [suggestions, setSuggestions] = useState<Record<string, ProgressSuggestion>>({});
+  const [showSummary, setShowSummary] = useState(false);
 
   const loading = loadingPlan || loadingSession || loadingExercises;
 
@@ -25,6 +28,21 @@ export default function WorkoutPage({ params }: { params: Promise<{ date: string
     mutateSession();
     mutatePlan();
   }
+
+  useEffect(() => {
+    if (!plan?.exercises?.length) return;
+    const ids = plan.exercises.map(e => e.exercise_id).join(',');
+    fetch(`/api/progress/suggestions?exerciseIds=${ids}`)
+      .then(r => r.json())
+      .then(setSuggestions)
+      .catch(() => {});
+  }, [plan]);
+
+  useEffect(() => {
+    if (session?.status === 'done' && (session.exercises?.length ?? 0) > 0) {
+      setShowSummary(true);
+    }
+  }, [session?.status, session?.exercises?.length]);
 
   if (loading) return <PageSpinner />;
 
@@ -96,6 +114,7 @@ export default function WorkoutPage({ params }: { params: Promise<{ date: string
                 sessionId={session?.id ?? ''}
                 onEnsureSession={ensureSession}
                 onUpdated={refresh}
+                suggestion={suggestions[planEx.exercise_id]}
               />
             ))
           }
@@ -112,6 +131,10 @@ export default function WorkoutPage({ params }: { params: Promise<{ date: string
             />
           ))}
         </div>
+      )}
+
+      {showSummary && session && (
+        <SessionSummary session={session} onClose={() => setShowSummary(false)} />
       )}
     </div>
   );

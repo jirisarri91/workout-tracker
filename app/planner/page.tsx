@@ -5,6 +5,7 @@ import { useWorkoutPlans, useWorkoutPlan } from '@/hooks/useWorkoutPlan';
 import { useExercises } from '@/hooks/useExercises';
 import { PlannerDatePicker } from '@/components/planner/PlannerDatePicker';
 import { PlanEditor } from '@/components/planner/PlanEditor';
+import { AIPlanGenerator } from '@/components/planner/AIPlanGenerator';
 import { PageSpinner } from '@/components/ui/Spinner';
 
 export default function PlannerPage() {
@@ -25,7 +26,10 @@ export default function PlannerPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-bold text-slate-900">Workout Planner</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-slate-900">Workout Planner</h1>
+        <AIPlanGenerator date={selectedDate} onPlanCreated={onSaved} />
+      </div>
       <PlannerDatePicker
         plans={plans}
         selectedDate={selectedDate}
