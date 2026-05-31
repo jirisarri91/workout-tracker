@@ -67,9 +67,11 @@ interface ExerciseCardProps {
   onUpdate: (id: string, patch: Partial<WorkoutPlanExercise>) => void;
   onRemove: (id: string) => void;
   overlay?: boolean;
+  isExpanded?: boolean;
+  onToggle?: (id: string) => void;
 }
 
-function SortableExerciseCard({ ex, blockName, allExercises, blockNames, onUpdate, onRemove }: ExerciseCardProps) {
+function SortableExerciseCard({ ex, blockName, allExercises, blockNames, onUpdate, onRemove, isExpanded, onToggle }: ExerciseCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: ex.id });
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -87,6 +89,8 @@ function SortableExerciseCard({ ex, blockName, allExercises, blockNames, onUpdat
         onUpdate={onUpdate}
         onRemove={onRemove}
         dragHandle={<DragHandle listeners={listeners} attributes={attributes} />}
+        isExpanded={isExpanded}
+        onToggle={onToggle}
       />
     </div>
   );
@@ -100,17 +104,46 @@ function ExerciseCardContent({
   onUpdate,
   onRemove,
   dragHandle,
+  isExpanded,
+  onToggle,
 }: ExerciseCardProps & { dragHandle?: React.ReactNode }) {
   const exercise = ex.exercise ?? allExercises.find(e => e.id === ex.exercise_id);
 
+  if (!isExpanded) {
+    const summary = [
+      ex.sets && ex.reps ? `${ex.sets}×${ex.reps}` : null,
+      ex.target_weight ? `${ex.target_weight}kg` : null,
+    ].filter(Boolean).join(' · ');
+
+    return (
+      <div
+        className="bg-white rounded-xl border border-slate-100 shadow-sm px-3 py-2.5 flex items-center gap-1 cursor-pointer hover:border-orange-200 transition-colors"
+        onClick={() => onToggle?.(ex.id)}
+      >
+        {dragHandle}
+        <span className="font-medium text-slate-900 text-sm flex-1 truncate">{exercise?.name ?? 'Unknown'}</span>
+        {summary && <span className="text-xs text-slate-400 shrink-0">{summary}</span>}
+        <button
+          onClick={e => { e.stopPropagation(); onRemove(ex.id); }}
+          className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-500"
+        >✕</button>
+        <span className="text-slate-300 text-xs">›</span>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-4">
+    <div className="bg-white rounded-xl border border-orange-200 shadow-sm p-4">
       <div className="flex items-center gap-1 mb-3">
         {dragHandle}
         <span className="font-medium text-slate-900 text-sm flex-1">{exercise?.name ?? 'Unknown'}</span>
         {exercise && exercise.muscle_groups?.length > 0 && (
           <Badge color="gray">{exercise.muscle_groups[0]}</Badge>
         )}
+        <button
+          onClick={() => onToggle?.(ex.id)}
+          className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 text-xs"
+        >∧</button>
         <button
           onClick={() => onRemove(ex.id)}
           className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-500"
@@ -154,6 +187,8 @@ interface SortableBlockProps {
   onDeleteBlock: (blockName: string) => void;
   onUpdateExercise: (id: string, patch: Partial<WorkoutPlanExercise>) => void;
   onRemoveExercise: (id: string) => void;
+  expandedExId: string | null;
+  onToggleEx: (id: string) => void;
 }
 
 function SortableBlock({
@@ -167,6 +202,8 @@ function SortableBlock({
   onDeleteBlock,
   onUpdateExercise,
   onRemoveExercise,
+  expandedExId,
+  onToggleEx,
 }: SortableBlockProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: `block:${blockName}` });
   const style = {
@@ -219,6 +256,8 @@ function SortableBlock({
               blockNames={blockNames}
               onUpdate={onUpdateExercise}
               onRemove={onRemoveExercise}
+              isExpanded={expandedExId === ex.id}
+              onToggle={onToggleEx}
             />
           ))}
         </SortableContext>
@@ -241,6 +280,8 @@ export function PlanEditor({ date, plan, allExercises, allPlans, onSaved }: Prop
   const [endTime, setEndTime] = useState('');
   const [exercises, setExercises] = useState<WorkoutPlanExercise[]>([]);
   const [blockNames, setBlockNames] = useState<string[]>([]);
+  const [expandedExId, setExpandedExId] = useState<string | null>(null);
+  const [metaExpanded, setMetaExpanded] = useState(!plan);
   const [pickerForBlock, setPickerForBlock] = useState<string | null | typeof PICKER_CLOSED>(PICKER_CLOSED);
   const [showCopyModal, setShowCopyModal] = useState(false);
   const [showAddBlock, setShowAddBlock] = useState(false);
@@ -267,10 +308,14 @@ export function PlanEditor({ date, plan, allExercises, allPlans, onSaved }: Prop
         if (e.block_name && !names.includes(e.block_name)) names.push(e.block_name);
       }
       setBlockNames(names);
+      setMetaExpanded(false);
+      setExpandedExId(null);
     } else {
       setName(''); setObjective(''); setNotes('');
       setStartTime(''); setEndTime('');
       setExercises([]); setBlockNames([]);
+      setMetaExpanded(true);
+      setExpandedExId(null);
     }
   }, [plan, date]);
 
@@ -282,9 +327,14 @@ export function PlanEditor({ date, plan, allExercises, allPlans, onSaved }: Prop
     setExercises(exs => exs.filter(e => e.id !== id));
   }
 
+  function toggleEx(id: string) {
+    setExpandedExId(prev => prev === id ? null : id);
+  }
+
   function addExercise(ex: Exercise, blockName: string | null) {
+    const newId = `temp-${Date.now()}`;
     const newEx: WorkoutPlanExercise = {
-      id: `temp-${Date.now()}`,
+      id: newId,
       workout_plan_id: plan?.id ?? '',
       exercise_id: ex.id,
       block_name: blockName,
@@ -299,6 +349,7 @@ export function PlanEditor({ date, plan, allExercises, allPlans, onSaved }: Prop
       exercise: ex,
     };
     setExercises(exs => [...exs, newEx]);
+    setExpandedExId(newId);
     setPickerForBlock(PICKER_CLOSED);
   }
 
@@ -425,31 +476,60 @@ export function PlanEditor({ date, plan, allExercises, allPlans, onSaved }: Prop
     >
       <div className="flex flex-col gap-4">
         {/* Plan metadata */}
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="font-semibold text-slate-900">{displayDate}</h2>
-            {plan && (
-              <button
-                onClick={() => setShowCopyModal(true)}
-                className="flex items-center gap-1.5 text-xs font-medium text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100 px-3 py-1.5 rounded-lg transition-colors"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5">
-                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                </svg>
-                Copy to days
-              </button>
-            )}
-          </div>
-          <div className="flex flex-col gap-3">
-            <Input label="Workout name" placeholder="e.g. Push Day A" value={name} onChange={e => setName(e.target.value)} />
-            <Textarea label="Objective" placeholder="Goals for this session..." value={objective} rows={2} onChange={e => setObjective(e.target.value)} />
-            <div className="grid grid-cols-2 gap-2">
-              <Input label="Start time" type="time" value={startTime} onChange={e => setStartTime(e.target.value)} />
-              <Input label="End time" type="time" value={endTime} onChange={e => setEndTime(e.target.value)} />
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+          <button
+            className="w-full flex items-center justify-between px-4 py-3 text-left"
+            onClick={() => setMetaExpanded(v => !v)}
+          >
+            <div className="flex flex-col">
+              <span className="font-semibold text-slate-900 text-sm">{displayDate}</span>
+              {!metaExpanded && name && (
+                <span className="text-xs text-slate-500 mt-0.5">{name}</span>
+              )}
             </div>
-            <Textarea label="General notes" placeholder="Any extra notes..." value={notes} rows={2} onChange={e => setNotes(e.target.value)} />
-          </div>
+            <div className="flex items-center gap-2">
+              {plan && !metaExpanded && (
+                <button
+                  onClick={e => { e.stopPropagation(); setShowCopyModal(true); }}
+                  className="flex items-center gap-1.5 text-xs font-medium text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100 px-3 py-1.5 rounded-lg transition-colors"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                  </svg>
+                  Copy
+                </button>
+              )}
+              <span className="text-slate-400 text-xs">{metaExpanded ? '∧' : '∨'}</span>
+            </div>
+          </button>
+
+          {metaExpanded && (
+            <div className="px-4 pb-4 flex flex-col gap-3 border-t border-slate-100 pt-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-slate-400">{displayDate}</span>
+                {plan && (
+                  <button
+                    onClick={() => setShowCopyModal(true)}
+                    className="flex items-center gap-1.5 text-xs font-medium text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100 px-3 py-1.5 rounded-lg transition-colors"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                    </svg>
+                    Copy to days
+                  </button>
+                )}
+              </div>
+              <Input label="Workout name" placeholder="e.g. Push Day A" value={name} onChange={e => setName(e.target.value)} />
+              <Textarea label="Objective" placeholder="Goals for this session..." value={objective} rows={2} onChange={e => setObjective(e.target.value)} />
+              <div className="grid grid-cols-2 gap-2">
+                <Input label="Start time" type="time" value={startTime} onChange={e => setStartTime(e.target.value)} />
+                <Input label="End time" type="time" value={endTime} onChange={e => setEndTime(e.target.value)} />
+              </div>
+              <Textarea label="General notes" placeholder="Any extra notes..." value={notes} rows={2} onChange={e => setNotes(e.target.value)} />
+            </div>
+          )}
         </div>
 
         {/* Ungrouped exercises */}
@@ -471,6 +551,8 @@ export function PlanEditor({ date, plan, allExercises, allPlans, onSaved }: Prop
                 blockNames={blockNames}
                 onUpdate={updateExercise}
                 onRemove={removeExercise}
+                isExpanded={expandedExId === ex.id}
+                onToggle={toggleEx}
               />
             ))}
           </SortableContext>
@@ -499,6 +581,8 @@ export function PlanEditor({ date, plan, allExercises, allPlans, onSaved }: Prop
                 onDeleteBlock={deleteBlock}
                 onUpdateExercise={updateExercise}
                 onRemoveExercise={removeExercise}
+                expandedExId={expandedExId}
+                onToggleEx={toggleEx}
               />
             );
           })}
