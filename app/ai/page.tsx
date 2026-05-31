@@ -40,14 +40,14 @@ export default function AICoachPage() {
       <div>
         <h1 className="text-2xl font-bold text-slate-900">AI Coach</h1>
         <p className="text-sm text-slate-500 mt-1">
-          Get personalized recommendations based on your workout history and goals.
+          Get recommendations, or ask me to create templates, workout plans, and mesocycles.
         </p>
       </div>
 
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 flex flex-col gap-3">
         <Textarea
           label="Ask something specific (optional)"
-          placeholder="e.g. How should I adjust my squats? Am I overtraining? What should I do next week?"
+          placeholder="e.g. Create a push day template, plan a leg workout for tomorrow, create a 6-week hypertrophy mesocycle, how should I adjust my squats?"
           value={prompt}
           rows={3}
           onChange={e => setPrompt(e.target.value)}
@@ -71,7 +71,8 @@ export default function AICoachPage() {
           <p className="font-medium mb-1">💡 Tips for best results:</p>
           <ul className="list-disc list-inside space-y-1 text-orange-600">
             <li>Set your fitness goals on the Home screen</li>
-            <li>Track your workouts consistently for a few weeks</li>
+            <li>Ask me to create a template, plan a workout for a date, or build a mesocycle</li>
+            <li>Track your workouts consistently for better recommendations</li>
             <li>Record actual weights and observations after each exercise</li>
           </ul>
         </div>
