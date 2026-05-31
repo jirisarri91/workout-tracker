@@ -3,7 +3,7 @@ import { useState, useRef } from 'react';
 import { Exercise, WorkoutPlanExercise, WorkoutSessionExercise, ProgressSuggestion } from '@/types';
 import { ExerciseInstructions } from './ExerciseInstructions';
 import { ExercisePicker } from './ExercisePicker';
-import { Input } from '@/components/ui/Input';
+import { Input, Textarea } from '@/components/ui/Input';
 import { useToast } from '@/components/ui/Toast';
 
 interface Props {
@@ -33,8 +33,11 @@ export function CircuitExerciseCard({
 }: Props) {
   const [showPicker, setShowPicker] = useState(false);
   const [localWeight, setLocalWeight] = useState(sessionExercise?.actual_weight?.toString() ?? '');
+  const [localObs, setLocalObs] = useState(sessionExercise?.observations ?? '');
+  const [showEdit, setShowEdit] = useState(false);
   const [isPR, setIsPR] = useState(false);
   const saveTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const obsTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { toast } = useToast();
 
   const exercise = planExercise.exercise!;
@@ -112,6 +115,17 @@ export function CircuitExerciseCard({
     saveTimeout.current = setTimeout(async () => {
       try {
         await upsertSessionExercise({ actual_weight: val ? parseFloat(val) : null });
+      } catch {
+        toast('Failed to save', 'error');
+      }
+    }, 700);
+  }
+
+  function scheduleObsSave(val: string) {
+    if (obsTimeout.current) clearTimeout(obsTimeout.current);
+    obsTimeout.current = setTimeout(async () => {
+      try {
+        await upsertSessionExercise({ observations: val });
       } catch {
         toast('Failed to save', 'error');
       }
@@ -224,9 +238,9 @@ export function CircuitExerciseCard({
             </button>
           </div>
 
-          {/* Weight input */}
-          <div className="flex items-center gap-3">
-            <div className="w-32">
+          {/* Weight + observations */}
+          <div className="flex gap-2">
+            <div className="w-28 shrink-0">
               <Input
                 label="Actual kg"
                 type="number"
@@ -240,20 +254,83 @@ export function CircuitExerciseCard({
                 className="h-9 text-sm"
               />
             </div>
-            {planExercise.rest_seconds && (
-              <p className="text-xs text-slate-400 mt-4">Rest: {planExercise.rest_seconds}s after</p>
-            )}
+            <div className="flex-1">
+              <Textarea
+                label="Sensations"
+                placeholder="How did it feel?"
+                value={localObs}
+                rows={2}
+                className="text-sm"
+                onChange={e => {
+                  setLocalObs(e.target.value);
+                  scheduleObsSave(e.target.value);
+                }}
+              />
+            </div>
           </div>
+          {planExercise.rest_seconds && (
+            <p className="text-xs text-slate-400">Rest: {planExercise.rest_seconds}s after</p>
+          )}
         </div>
       )}
 
       {/* Summary row when done */}
-      {isExerciseDone && (
-        <div className="px-4 pb-3 flex items-center gap-3 text-xs text-slate-500">
-          {Array.from({ length: totalSets }).map((_, i) => (
-            <div key={i} className="w-2.5 h-2.5 rounded-full bg-green-400" />
-          ))}
-          {localWeight && <span className="ml-1 font-medium text-slate-600">{localWeight}kg</span>}
+      {isExerciseDone && !showEdit && (
+        <div className="px-4 pb-3 flex items-center gap-2 text-xs text-slate-500">
+          <div className="flex items-center gap-1.5 flex-1">
+            {Array.from({ length: totalSets }).map((_, i) => (
+              <div key={i} className="w-2.5 h-2.5 rounded-full bg-green-400" />
+            ))}
+            {localWeight && <span className="ml-1 font-medium text-slate-600">{localWeight}kg</span>}
+            {localObs && <span className="ml-1 text-slate-400 truncate max-w-[120px]">{localObs}</span>}
+          </div>
+          <button
+            onClick={() => setShowEdit(true)}
+            className="shrink-0 text-xs text-slate-400 hover:text-slate-600 px-2 py-1 rounded-lg border border-slate-200 hover:border-slate-300 transition-colors"
+          >
+            edit
+          </button>
+        </div>
+      )}
+
+      {/* Edit mode when done */}
+      {isExerciseDone && showEdit && (
+        <div className="px-4 pb-3 space-y-2">
+          <div className="flex gap-2">
+            <div className="w-28 shrink-0">
+              <Input
+                label="Actual kg"
+                type="number"
+                step="0.5"
+                placeholder={planExercise.target_weight?.toString() ?? '0'}
+                value={localWeight}
+                onChange={e => {
+                  setLocalWeight(e.target.value);
+                  scheduleWeightSave(e.target.value);
+                }}
+                className="h-9 text-sm"
+              />
+            </div>
+            <div className="flex-1">
+              <Textarea
+                label="Sensations"
+                placeholder="How did it feel?"
+                value={localObs}
+                rows={2}
+                className="text-sm"
+                onChange={e => {
+                  setLocalObs(e.target.value);
+                  scheduleObsSave(e.target.value);
+                }}
+              />
+            </div>
+          </div>
+          <button
+            onClick={() => setShowEdit(false)}
+            className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
+          >
+            ← done editing
+          </button>
         </div>
       )}
 
