@@ -87,7 +87,7 @@ export function DayStatusModal({ date, session, hasPlan, onClose, onSaved }: Pro
             className="text-center text-sm text-orange-500 font-medium hover:underline"
             onClick={onClose}
           >
-            Open workout for this day →
+            {session?.status === 'done' ? 'Edit workout →' : 'Open workout for this day →'}
           </Link>
         )}
       </div>

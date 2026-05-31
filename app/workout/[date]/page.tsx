@@ -1,5 +1,5 @@
 'use client';
-import { use, useEffect, useState } from 'react';
+import { use, useEffect, useRef, useState } from 'react';
 import { format, parseISO } from 'date-fns';
 import Link from 'next/link';
 import { useWorkoutPlan } from '@/hooks/useWorkoutPlan';
@@ -56,6 +56,7 @@ export default function WorkoutPage({ params }: { params: Promise<{ date: string
 
   const [suggestions, setSuggestions] = useState<Record<string, ProgressSuggestion>>({});
   const [showSummary, setShowSummary] = useState(false);
+  const prevSessionStatus = useRef<string | undefined>(undefined);
   const [activeBlockIndex, setActiveBlockIndex] = useState(0);
   const [showFullPlan, setShowFullPlan] = useState(false);
 
@@ -127,7 +128,10 @@ export default function WorkoutPage({ params }: { params: Promise<{ date: string
   }, [plan]);
 
   useEffect(() => {
-    if (session?.status === 'done' && (session.exercises?.length ?? 0) > 0) {
+    const prev = prevSessionStatus.current;
+    prevSessionStatus.current = session?.status;
+    // Only auto-show summary when status transitions TO done during this session, not on initial load
+    if (session?.status === 'done' && prev !== undefined && prev !== 'done' && (session.exercises?.length ?? 0) > 0) {
       setShowSummary(true);
     }
   }, [session?.status, session?.exercises?.length]);
