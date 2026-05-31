@@ -7,7 +7,7 @@ import { useToast } from '@/components/ui/Toast';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 
-export function WeightTracker() {
+export function WeightTracker({ chartOnly = false }: { chartOnly?: boolean } = {}) {
   const { entries, mutate } = useWeightEntries();
   const { toast } = useToast();
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
@@ -53,18 +53,20 @@ export function WeightTracker() {
   return (
     <div className="flex flex-col gap-4">
       {/* Log form */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
-        <h3 className="font-semibold text-slate-800 mb-3">Log Weight</h3>
-        <div className="flex gap-2 items-end">
-          <div className="w-36">
-            <Input label="Date" type="date" value={date} onChange={e => setDate(e.target.value)} />
+      {!chartOnly && (
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
+          <h3 className="font-semibold text-slate-800 mb-3">Log Weight</h3>
+          <div className="flex gap-2 items-end">
+            <div className="w-36">
+              <Input label="Date" type="date" value={date} onChange={e => setDate(e.target.value)} />
+            </div>
+            <div className="w-28">
+              <Input label="Weight (kg)" type="number" step="0.1" placeholder="70.0" value={weight} onChange={e => setWeight(e.target.value)} />
+            </div>
+            <Button onClick={save} loading={saving} disabled={!weight} className="mb-0.5">Save</Button>
           </div>
-          <div className="w-28">
-            <Input label="Weight (kg)" type="number" step="0.1" placeholder="70.0" value={weight} onChange={e => setWeight(e.target.value)} />
-          </div>
-          <Button onClick={save} loading={saving} disabled={!weight} className="mb-0.5">Save</Button>
         </div>
-      </div>
+      )}
 
       {/* Chart */}
       {chartData.length > 0 && (
@@ -93,7 +95,7 @@ export function WeightTracker() {
       )}
 
       {/* Log list */}
-      {entries.length > 0 && (
+      {!chartOnly && entries.length > 0 && (
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
           <h3 className="font-semibold text-slate-800 mb-3">History</h3>
           <div className="flex flex-col gap-2">

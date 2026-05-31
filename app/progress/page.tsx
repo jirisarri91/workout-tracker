@@ -97,7 +97,7 @@ export default function ProgressPage() {
         </div>
       )}
 
-      {tab === 'weight' && <WeightTracker />}
+      {tab === 'weight' && <WeightTracker chartOnly />}
     </div>
   );
 }

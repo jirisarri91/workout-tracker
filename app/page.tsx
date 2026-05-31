@@ -5,7 +5,6 @@ import { useWorkoutSessions } from '@/hooks/useWorkoutSession';
 import { useWorkoutPlans } from '@/hooks/useWorkoutPlan';
 import { WorkoutCalendar } from '@/components/dashboard/WorkoutCalendar';
 import { SummaryCards } from '@/components/dashboard/SummaryCards';
-import { ObjectiveEditor } from '@/components/dashboard/ObjectiveEditor';
 import { WeeklyDigest } from '@/components/dashboard/WeeklyDigest';
 import { PageSpinner } from '@/components/ui/Spinner';
 
@@ -34,7 +33,6 @@ export default function DashboardPage() {
       <SummaryCards plans={plans} sessions={sessions} />
       <WeeklyDigest />
       <WorkoutCalendar sessions={sessions} plans={plans} onSessionChange={refresh} />
-      <ObjectiveEditor />
     </div>
   );
 }
