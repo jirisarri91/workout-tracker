@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Exercise } from '@/types';
 import { Input, Textarea } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
@@ -8,28 +8,59 @@ import { useToast } from '@/components/ui/Toast';
 
 interface Props {
   exercise?: Exercise | null;
+  allMuscleGroups?: string[];
   onSaved: () => void;
   onClose: () => void;
 }
 
 interface Resource { title: string; url: string }
 
-export function ExerciseForm({ exercise, onSaved, onClose }: Props) {
+export function ExerciseForm({ exercise, allMuscleGroups = [], onSaved, onClose }: Props) {
   const [name, setName] = useState('');
   const [instructions, setInstructions] = useState('');
-  const [muscleGroupsStr, setMuscleGroupsStr] = useState('');
+  const [muscleGroups, setMuscleGroups] = useState<string[]>([]);
+  const [mgInput, setMgInput] = useState('');
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [resources, setResources] = useState<Resource[]>([{ title: '', url: '' }]);
   const [saving, setSaving] = useState(false);
+  const mgInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   useEffect(() => {
     if (exercise) {
       setName(exercise.name);
       setInstructions(exercise.instructions ?? '');
-      setMuscleGroupsStr(exercise.muscle_groups?.join(', ') ?? '');
+      setMuscleGroups(exercise.muscle_groups ?? []);
       setResources(exercise.resources?.length > 0 ? exercise.resources : [{ title: '', url: '' }]);
     }
   }, [exercise]);
+
+  const suggestions = allMuscleGroups.filter(
+    g => g.toLowerCase().includes(mgInput.toLowerCase()) && !muscleGroups.includes(g)
+  );
+
+  function addGroup(group: string) {
+    const trimmed = group.trim();
+    if (trimmed && !muscleGroups.includes(trimmed)) {
+      setMuscleGroups(prev => [...prev, trimmed]);
+    }
+    setMgInput('');
+    setShowSuggestions(false);
+    mgInputRef.current?.focus();
+  }
+
+  function removeGroup(group: string) {
+    setMuscleGroups(prev => prev.filter(g => g !== group));
+  }
+
+  function handleMgKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if ((e.key === 'Enter' || e.key === ',') && mgInput.trim()) {
+      e.preventDefault();
+      addGroup(mgInput);
+    } else if (e.key === 'Backspace' && !mgInput && muscleGroups.length > 0) {
+      setMuscleGroups(prev => prev.slice(0, -1));
+    }
+  }
 
   function updateResource(idx: number, field: keyof Resource, value: string) {
     setResources(rs => rs.map((r, i) => i === idx ? { ...r, [field]: value } : r));
@@ -37,12 +68,13 @@ export function ExerciseForm({ exercise, onSaved, onClose }: Props) {
 
   async function save() {
     if (!name.trim()) { toast('Exercise name is required', 'error'); return; }
+    const pendingGroups = mgInput.trim() ? [...muscleGroups, mgInput.trim()] : muscleGroups;
     setSaving(true);
     try {
       const body = {
         name: name.trim(),
         instructions: instructions.trim() || null,
-        muscle_groups: muscleGroupsStr.split(',').map(s => s.trim()).filter(Boolean),
+        muscle_groups: pendingGroups,
         resources: resources.filter(r => r.url.trim()),
       };
       if (exercise) {
@@ -65,12 +97,51 @@ export function ExerciseForm({ exercise, onSaved, onClose }: Props) {
     <Modal open onClose={onClose} title={exercise ? 'Edit Exercise' : 'New Exercise'}>
       <div className="flex flex-col gap-3">
         <Input label="Name *" placeholder="e.g. Barbell Squat" value={name} onChange={e => setName(e.target.value)} />
-        <Input
-          label="Muscle groups (comma separated)"
-          placeholder="e.g. Quadriceps, Hamstrings, Glutes"
-          value={muscleGroupsStr}
-          onChange={e => setMuscleGroupsStr(e.target.value)}
-        />
+
+        {/* Muscle groups tag input */}
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-slate-700">Muscle groups</label>
+          <div
+            className="min-h-10 px-2 py-1.5 rounded-xl border border-slate-200 bg-white flex flex-wrap gap-1.5 items-center cursor-text focus-within:ring-2 focus-within:ring-orange-400 focus-within:border-transparent"
+            onClick={() => mgInputRef.current?.focus()}
+          >
+            {muscleGroups.map(g => (
+              <span key={g} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 text-xs font-medium">
+                {g}
+                <button type="button" onClick={() => removeGroup(g)} className="hover:text-orange-900 leading-none">×</button>
+              </span>
+            ))}
+            <div className="relative flex-1 min-w-[120px]">
+              <input
+                ref={mgInputRef}
+                type="text"
+                value={mgInput}
+                onChange={e => { setMgInput(e.target.value); setShowSuggestions(true); }}
+                onKeyDown={handleMgKeyDown}
+                onFocus={() => setShowSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                placeholder={muscleGroups.length === 0 ? 'e.g. Quadriceps, Hamstrings…' : ''}
+                className="w-full text-sm bg-transparent outline-none py-0.5 placeholder:text-slate-400"
+              />
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="absolute left-0 top-full mt-1 z-20 bg-white border border-slate-200 rounded-xl shadow-lg py-1 min-w-[160px] max-h-48 overflow-y-auto">
+                  {suggestions.map(g => (
+                    <button
+                      key={g}
+                      type="button"
+                      onMouseDown={() => addGroup(g)}
+                      className="w-full text-left px-3 py-1.5 text-sm text-slate-700 hover:bg-orange-50 hover:text-orange-700"
+                    >
+                      {g}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+          <p className="text-xs text-slate-400">Press Enter or comma to add a new group</p>
+        </div>
+
         <Textarea
           label="Instructions"
           placeholder="How to perform the exercise..."

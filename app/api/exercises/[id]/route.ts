@@ -36,6 +36,16 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  await prisma.exercise.delete({ where: { id } });
-  return new Response(null, { status: 204 });
+  try {
+    await prisma.exercise.delete({ where: { id } });
+    return new Response(null, { status: 204 });
+  } catch (e: any) {
+    if (e?.code === 'P2003' || e?.code === 'P2014') {
+      return Response.json(
+        { error: 'This exercise is used in workout plans or sessions and cannot be deleted.' },
+        { status: 409 }
+      );
+    }
+    throw e;
+  }
 }

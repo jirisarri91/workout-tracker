@@ -46,10 +46,14 @@ export function ExerciseList({ exercises, onChanged }: Props) {
     if (!confirm(`Delete "${ex.name}"? This cannot be undone.`)) return;
     setDeleting(ex.id);
     try {
-      await fetch(`/api/exercises/${ex.id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/exercises/${ex.id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error ?? 'Failed to delete');
+      }
       toast('Exercise deleted');
       onChanged();
-    } catch { toast('Failed to delete', 'error'); }
+    } catch (e: any) { toast(e.message || 'Failed to delete', 'error'); }
     finally { setDeleting(null); }
   }
 
@@ -149,6 +153,7 @@ export function ExerciseList({ exercises, onChanged }: Props) {
       {showForm && (
         <ExerciseForm
           exercise={editTarget && editTarget !== 'new' ? editTarget : null}
+          allMuscleGroups={allMuscleGroups}
           onSaved={onChanged}
           onClose={() => setShowForm(false)}
         />
