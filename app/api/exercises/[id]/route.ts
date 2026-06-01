@@ -43,7 +43,7 @@ export async function DELETE(
   ]);
   if (planCount + sessionCount + templateCount > 0) {
     return Response.json(
-      { error: 'This exercise is used in workout plans or sessions and cannot be deleted.' },
+      { error: 'This exercise is used in workout plans or sessions and cannot be deleted.', debug: { planCount, sessionCount, templateCount } },
       { status: 409 }
     );
   }
