@@ -41,11 +41,21 @@ export async function DELETE(
     prisma.workoutSessionExercise.count({ where: { exercise_id: id } }),
     prisma.workoutTemplateExercise.count({ where: { exercise_id: id } }),
   ]);
-  if (planCount + sessionCount + templateCount > 0) {
+  if (planCount + templateCount > 0) {
     return Response.json(
-      { error: 'This exercise is used in workout plans or sessions and cannot be deleted.', debug: { planCount, sessionCount, templateCount } },
+      { error: 'This exercise is used in active workout plans or templates and cannot be deleted.' },
       { status: 409 }
     );
+  }
+  if (sessionCount > 0) {
+    const url = new URL(_req.url);
+    if (url.searchParams.get('force') !== 'true') {
+      return Response.json(
+        { error: `This exercise appears in ${sessionCount} past workout session(s). Delete it and remove those records?`, code: 'HAS_SESSIONS', sessionCount },
+        { status: 409 }
+      );
+    }
+    await prisma.workoutSessionExercise.deleteMany({ where: { exercise_id: id } });
   }
   await prisma.exercise.delete({ where: { id } });
   return new Response(null, { status: 204 });

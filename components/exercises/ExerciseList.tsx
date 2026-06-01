@@ -46,7 +46,16 @@ export function ExerciseList({ exercises, onChanged }: Props) {
     if (!confirm(`Delete "${ex.name}"? This cannot be undone.`)) return;
     setDeleting(ex.id);
     try {
-      const res = await fetch(`/api/exercises/${ex.id}`, { method: 'DELETE' });
+      let res = await fetch(`/api/exercises/${ex.id}`, { method: 'DELETE' });
+      if (res.status === 409) {
+        const data = await res.json().catch(() => ({}));
+        if (data.code === 'HAS_SESSIONS') {
+          if (!confirm(data.error)) { setDeleting(null); return; }
+          res = await fetch(`/api/exercises/${ex.id}?force=true`, { method: 'DELETE' });
+        } else {
+          throw new Error(data.error ?? 'Failed to delete');
+        }
+      }
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error ?? 'Failed to delete');
