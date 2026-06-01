@@ -20,6 +20,9 @@ export async function PUT(req: NextRequest) {
           objective_text: body.objective_text ?? null,
           strategy_text: body.strategy_text ?? null,
           birthday: birthday !== undefined ? birthday : undefined,
+          height_cm: body.height_cm != null ? Number(body.height_cm) : null,
+          personal_context: body.personal_context ?? null,
+          equipment: body.equipment ?? null,
           updated_at: new Date(),
         },
       })
@@ -28,6 +31,9 @@ export async function PUT(req: NextRequest) {
           objective_text: body.objective_text ?? null,
           strategy_text: body.strategy_text ?? null,
           birthday,
+          height_cm: body.height_cm != null ? Number(body.height_cm) : null,
+          personal_context: body.personal_context ?? null,
+          equipment: body.equipment ?? null,
         },
       });
 

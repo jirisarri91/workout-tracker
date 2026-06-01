@@ -104,11 +104,14 @@ model WorkoutSessionExercise {
 }
 
 model UserObjective {
-  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  objective_text String?
-  strategy_text  String?
-  birthday       DateTime? @db.Date
-  updated_at     DateTime  @default(now()) @db.Timestamptz(6)
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  objective_text   String?
+  strategy_text    String?
+  birthday         DateTime? @db.Date
+  height_cm        Int?
+  personal_context String?
+  equipment        String?
+  updated_at       DateTime  @default(now()) @db.Timestamptz(6)
 
   @@map("user_objectives")
 }

@@ -47,7 +47,10 @@ export async function GET() {
   const prompt = `
 ${objective ? `Goal: ${objective.objective_text ?? 'Not set'}\nStrategy: ${objective.strategy_text ?? 'Not set'}` : 'No goals set.'}
 ${age ? `Age: ${age}` : ''}
+${objective?.height_cm ? `Height: ${objective.height_cm}cm` : ''}
 ${latestWeight ? `Current weight: ${Number(latestWeight.weight_kg)}kg` : ''}
+${objective?.equipment ? `Available equipment: ${objective.equipment}` : ''}
+${objective?.personal_context ? `Personal context: ${objective.personal_context}` : ''}
 
 Last week's sessions (${serialized.length}):
 ${serialized.map(s => `- ${s.date}: ${s.status} | ${s.exercises?.map(e => `${e.exercise?.name ?? '?'} ${e.actual_weight ? `@ ${e.actual_weight}kg` : ''} ${e.sets && e.reps ? `${e.sets}×${e.reps}` : ''}`).join(', ') ?? 'none'}`).join('\n')}

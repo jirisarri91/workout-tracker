@@ -78,6 +78,9 @@ export interface UserObjectives {
   objective_text: string | null;
   strategy_text: string | null;
   birthday: string | null;
+  height_cm: number | null;
+  personal_context: string | null;
+  equipment: string | null;
   updated_at: string;
 }
 

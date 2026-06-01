@@ -25,6 +25,8 @@ export async function POST(req: NextRequest) {
   const prompt = `
 Create a workout plan for ${date}.
 ${objective ? `User goal: ${objective.objective_text}\nStrategy: ${objective.strategy_text}` : ''}
+${objective?.equipment ? `Available equipment: ${objective.equipment}` : ''}
+${objective?.personal_context ? `Personal context: ${objective.personal_context}` : ''}
 Request: ${intent}
 
 Recent workouts (avoid repeating same muscles on consecutive days):

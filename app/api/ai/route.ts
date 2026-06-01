@@ -238,7 +238,10 @@ When not creating something, provide specific, actionable recommendations. Be en
 ${objective ? `**My fitness goal:** ${objective.objective_text ?? 'Not set'}
 **My training strategy:** ${objective.strategy_text ?? 'Not set'}` : 'No fitness goals set yet.'}
 ${age ? `**Age:** ${age} years old` : ''}
+${objective?.height_cm ? `**Height:** ${objective.height_cm}cm` : ''}
 ${latestWeight ? `**Current weight:** ${Number(latestWeight.weight_kg)}kg (logged ${serialize(latestWeight.date)})` : ''}
+${objective?.equipment ? `**Available equipment:** ${objective.equipment}` : ''}
+${objective?.personal_context ? `**Personal context:** ${objective.personal_context}` : ''}
 
 **Recent workout sessions (last ${serializedSessions.length}):**
 ${serializedSessions.map(s => `
