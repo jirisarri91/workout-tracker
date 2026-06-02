@@ -16,7 +16,7 @@ interface Props {
   onCopied: () => void;
 }
 
-const DAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+const DAYS = ['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá'];
 
 export function CopyPlanModal({ plan, existingPlans, onClose, onCopied }: Props) {
   const [viewDate, setViewDate] = useState(new Date());
@@ -54,13 +54,13 @@ export function CopyPlanModal({ plan, existingPlans, onClose, onCopied }: Props)
       const results: { date: string; status: string }[] = await res.json();
       const created = results.filter(r => r.status === 'created').length;
       const skipped = results.filter(r => r.status === 'skipped').length;
-      let msg = `Copied to ${created} day${created !== 1 ? 's' : ''}`;
-      if (skipped > 0) msg += ` (${skipped} skipped — already had a plan)`;
+      let msg = `Copiado a ${created} día${created !== 1 ? 's' : ''}`;
+      if (skipped > 0) msg += ` (${skipped} omitido${skipped !== 1 ? 's' : ''} — ya tenían un plan)`;
       toast(msg);
       onCopied();
       onClose();
     } catch {
-      toast('Failed to copy plan', 'error');
+      toast('Error al copiar el plan', 'error');
     } finally {
       setCopying(false);
     }
@@ -70,9 +70,9 @@ export function CopyPlanModal({ plan, existingPlans, onClose, onCopied }: Props)
     <Modal open onClose={onClose}>
       <div className="flex flex-col gap-4 p-1">
         <div>
-          <h2 className="font-semibold text-slate-900 text-lg">Copy workout</h2>
+          <h2 className="font-semibold text-slate-900 text-lg">Copiar entreno</h2>
           <p className="text-sm text-slate-500 mt-0.5">
-            Select the days you want to copy <span className="font-medium text-slate-700">{plan.name || 'this workout'}</span> to.
+            Seleccioná los días a los que querés copiar <span className="font-medium text-slate-700">{plan.name || 'este entreno'}</span>.
           </p>
         </div>
 
@@ -144,23 +144,23 @@ export function CopyPlanModal({ plan, existingPlans, onClose, onCopied }: Props)
         <div className="flex flex-wrap gap-3 text-xs text-slate-500">
           <span className="flex items-center gap-1.5">
             <span className="w-3 h-3 rounded-full bg-orange-400 inline-block" />
-            Already has a plan
+            Ya tiene un plan
           </span>
           <span className="flex items-center gap-1.5">
             <span className="w-3 h-3 rounded-full bg-slate-400 inline-block" />
-            Source workout
+            Entreno origen
           </span>
         </div>
 
         {selectedDates.size > 0 && (
           <p className="text-sm font-medium text-orange-600">
-            {selectedDates.size} day{selectedDates.size !== 1 ? 's' : ''} selected
+            {selectedDates.size} día{selectedDates.size !== 1 ? 's' : ''} seleccionado{selectedDates.size !== 1 ? 's' : ''}
           </p>
         )}
 
         <div className="flex gap-2">
           <Button variant="outline" className="flex-1" onClick={onClose} disabled={copying}>
-            Cancel
+            Cancelar
           </Button>
           <Button
             className="flex-1"
@@ -168,7 +168,7 @@ export function CopyPlanModal({ plan, existingPlans, onClose, onCopied }: Props)
             loading={copying}
             disabled={selectedDates.size === 0}
           >
-            Copy to {selectedDates.size > 0 ? `${selectedDates.size} day${selectedDates.size !== 1 ? 's' : ''}` : 'days'}
+            Copiar a {selectedDates.size > 0 ? `${selectedDates.size} día${selectedDates.size !== 1 ? 's' : ''}` : 'días'}
           </Button>
         </div>
       </div>

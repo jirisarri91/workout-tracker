@@ -49,9 +49,9 @@ export function WeeklyDigest() {
         <div className="flex items-center gap-2">
           <span className="text-lg">🤖</span>
           <div>
-            <p className="font-semibold text-slate-800 text-sm">AI Weekly Recap</p>
+            <p className="font-semibold text-slate-800 text-sm">Resumen Semanal IA</p>
             {data && !isLoading && (
-              <p className="text-xs text-slate-400">Week of {data.week_start}</p>
+              <p className="text-xs text-slate-400">Semana del {data.week_start}</p>
             )}
           </div>
         </div>
@@ -75,7 +75,7 @@ export function WeeklyDigest() {
               <div className="h-3 bg-slate-100 rounded animate-pulse w-3/4" />
               <div className="h-3 bg-slate-100 rounded animate-pulse w-full" />
               <div className="h-3 bg-slate-100 rounded animate-pulse w-2/3" />
-              <p className="text-xs text-slate-400 mt-2">Generating your weekly insights...</p>
+              <p className="text-xs text-slate-400 mt-2">Generando tu resumen semanal...</p>
             </div>
           ) : data?.content ? (
             <div className="pt-3 flex flex-col gap-1">
@@ -84,11 +84,11 @@ export function WeeklyDigest() {
                 onClick={refresh}
                 className="mt-3 text-xs text-orange-500 hover:text-orange-600 font-medium self-start"
               >
-                Refresh ↺
+                Actualizar ↺
               </button>
             </div>
           ) : (
-            <p className="text-sm text-slate-400 pt-3">No data yet — complete some workouts first.</p>
+            <p className="text-sm text-slate-400 pt-3">Sin datos aún — completá algunos entrenos primero.</p>
           )}
         </div>
       )}

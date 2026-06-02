@@ -28,7 +28,7 @@ export function ExerciseProgressChart({ data }: Props) {
   if (!data.length) {
     return (
       <div className="flex items-center justify-center h-40 text-slate-400 text-sm">
-        No data yet for this exercise
+        Sin datos aún para este ejercicio
       </div>
     );
   }

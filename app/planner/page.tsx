@@ -16,7 +16,7 @@ import { WorkoutTemplate } from '@/types';
 type Tab = 'date' | 'templates' | 'schedule';
 type TemplateView = 'list' | 'edit';
 
-const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const DAY_NAMES = ['domingos', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábados'];
 
 export default function PlannerPage() {
   const now = new Date();
@@ -77,27 +77,27 @@ export default function PlannerPage() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-900">Planner</h1>
+        <h1 className="text-2xl font-bold text-slate-900">Planificador</h1>
         {tab === 'date' && <AIPlanGenerator date={selectedDate} onPlanCreated={onPlanSaved} />}
         {tab === 'templates' && templateView === 'list' && (
           <button
             onClick={() => { setEditingTemplate(null); setTemplateView('edit'); }}
             className="flex items-center gap-1.5 text-sm font-medium bg-orange-500 hover:bg-orange-600 text-white px-3 py-1.5 rounded-xl transition-colors"
           >
-            + New template
+            + Nueva plantilla
           </button>
         )}
       </div>
 
       {/* Tabs */}
       <div className="flex bg-slate-100 rounded-xl p-1 gap-1">
-        {(['date', 'templates', 'schedule'] as Tab[]).map(t => (
+        {([['date', 'Fecha'], ['templates', 'Plantillas'], ['schedule', 'Horario']] as [Tab, string][]).map(([t, label]) => (
           <button
             key={t}
             onClick={() => { setTab(t); if (t === 'templates') setTemplateView('list'); }}
-            className={`flex-1 text-sm font-medium py-1.5 rounded-lg capitalize transition-colors ${tab === t ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+            className={`flex-1 text-sm font-medium py-1.5 rounded-lg transition-colors ${tab === t ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
           >
-            {t}
+            {label}
           </button>
         ))}
       </div>
@@ -112,18 +112,18 @@ export default function PlannerPage() {
             <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4 flex items-center gap-3">
               <div className="flex-1">
                 <p className="text-sm font-semibold text-orange-800">
-                  {DAY_NAMES[selectedDow]}s are scheduled for <span className="italic">{scheduledTemplate.name}</span>
+                  Los {DAY_NAMES[selectedDow]} están programados para <span className="italic">{scheduledTemplate.name}</span>
                 </p>
                 <p className="text-xs text-orange-600 mt-0.5">
-                  {scheduledTemplate.exercises?.length ?? 0} exercises
-                  {plan ? ' · Plan already exists for this day' : ''}
+                  {scheduledTemplate.exercises?.length ?? 0} ejercicio{(scheduledTemplate.exercises?.length ?? 0) !== 1 ? 's' : ''}
+                  {plan ? ' · Ya existe un plan para este día' : ''}
                 </p>
               </div>
               <button
                 onClick={() => applyTemplate(scheduledTemplate)}
                 className="shrink-0 text-sm font-medium bg-orange-500 hover:bg-orange-600 text-white px-3 py-1.5 rounded-xl transition-colors"
               >
-                {plan ? 'Re-apply' : 'Apply'}
+                {plan ? 'Re-aplicar' : 'Aplicar'}
               </button>
             </div>
           )}
@@ -202,8 +202,8 @@ function TemplateList({
   if (templates.length === 0) {
     return (
       <div className="bg-white rounded-2xl border border-dashed border-slate-200 p-8 text-center">
-        <p className="text-slate-500 text-sm">No templates yet.</p>
-        <p className="text-slate-400 text-xs mt-1">Create one with the button above.</p>
+        <p className="text-slate-500 text-sm">Sin plantillas todavía.</p>
+        <p className="text-slate-400 text-xs mt-1">Creá una con el botón de arriba.</p>
       </div>
     );
   }
@@ -223,7 +223,7 @@ function TemplateList({
                 <h3 className="font-semibold text-slate-900">{t.name}</h3>
                 {t.objective && <p className="text-xs text-slate-500 mt-0.5 truncate">{t.objective}</p>}
                 <div className="flex items-center gap-2 mt-2 flex-wrap">
-                  <span className="text-xs text-slate-400">{exCount} exercise{exCount !== 1 ? 's' : ''}</span>
+                  <span className="text-xs text-slate-400">{exCount} ejercicio{exCount !== 1 ? 's' : ''}</span>
                   {muscles.map(mg => (
                     <span key={mg} className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">{mg}</span>
                   ))}

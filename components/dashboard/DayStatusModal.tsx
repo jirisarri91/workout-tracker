@@ -16,13 +16,13 @@ interface Props {
 }
 
 const STATUS_OPTIONS: { value: DayStatus; label: string; color: string; emoji: string }[] = [
-  { value: 'done', label: 'Workout Done', color: 'border-green-400 bg-green-50 text-green-700', emoji: '✅' },
-  { value: 'skipped', label: 'Skipped', color: 'border-red-300 bg-red-50 text-red-600', emoji: '❌' },
-  { value: 'planned', label: 'Planned', color: 'border-slate-300 bg-slate-50 text-slate-600', emoji: '📋' },
-  { value: 'sport', label: 'Played Sport', color: 'border-blue-300 bg-blue-50 text-blue-600', emoji: '⚽' },
-  { value: 'swim', label: 'Swim', color: 'border-cyan-300 bg-cyan-50 text-cyan-600', emoji: '🏊' },
-  { value: 'walk', label: 'Walk', color: 'border-teal-300 bg-teal-50 text-teal-600', emoji: '🚶' },
-  { value: 'row', label: 'Row', color: 'border-indigo-300 bg-indigo-50 text-indigo-600', emoji: '🚣' },
+  { value: 'done', label: 'Entreno Completado', color: 'border-green-400 bg-green-50 text-green-700', emoji: '✅' },
+  { value: 'skipped', label: 'Omitido', color: 'border-red-300 bg-red-50 text-red-600', emoji: '❌' },
+  { value: 'planned', label: 'Planificado', color: 'border-slate-300 bg-slate-50 text-slate-600', emoji: '📋' },
+  { value: 'sport', label: 'Deporte', color: 'border-blue-300 bg-blue-50 text-blue-600', emoji: '⚽' },
+  { value: 'swim', label: 'Natación', color: 'border-cyan-300 bg-cyan-50 text-cyan-600', emoji: '🏊' },
+  { value: 'walk', label: 'Caminata', color: 'border-teal-300 bg-teal-50 text-teal-600', emoji: '🚶' },
+  { value: 'row', label: 'Remo', color: 'border-indigo-300 bg-indigo-50 text-indigo-600', emoji: '🚣' },
 ];
 
 export function DayStatusModal({ date, session, hasPlan, onClose, onSaved }: Props) {
@@ -46,10 +46,10 @@ export function DayStatusModal({ date, session, hasPlan, onClose, onSaved }: Pro
           body: JSON.stringify({ date, status }),
         });
       }
-      toast('Day updated');
+      toast('Día actualizado');
       onSaved();
     } catch {
-      toast('Failed to save', 'error');
+      toast('Error al guardar', 'error');
     } finally {
       setSaving(false);
     }
@@ -60,7 +60,7 @@ export function DayStatusModal({ date, session, hasPlan, onClose, onSaved }: Pro
   return (
     <Modal open onClose={onClose} title={displayDate}>
       <div className="flex flex-col gap-4">
-        <p className="text-sm text-slate-500">Set the activity for this day:</p>
+        <p className="text-sm text-slate-500">Indicá la actividad de este día:</p>
         <div className="grid grid-cols-2 gap-2">
           {STATUS_OPTIONS.map(opt => (
             <button
@@ -77,8 +77,8 @@ export function DayStatusModal({ date, session, hasPlan, onClose, onSaved }: Pro
         </div>
 
         <div className="flex gap-2 pt-2">
-          <Button variant="secondary" className="flex-1" onClick={onClose}>Cancel</Button>
-          <Button className="flex-1" loading={saving} onClick={save}>Save</Button>
+          <Button variant="secondary" className="flex-1" onClick={onClose}>Cancelar</Button>
+          <Button className="flex-1" loading={saving} onClick={save}>Guardar</Button>
         </div>
 
         {(hasPlan || session) && (
@@ -87,7 +87,7 @@ export function DayStatusModal({ date, session, hasPlan, onClose, onSaved }: Pro
             className="text-center text-sm text-orange-500 font-medium hover:underline"
             onClick={onClose}
           >
-            {session?.status === 'done' ? 'Edit workout →' : 'Open workout for this day →'}
+            {session?.status === 'done' ? 'Editar entreno →' : 'Abrir entreno de este día →'}
           </Link>
         )}
       </div>

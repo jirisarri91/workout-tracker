@@ -45,7 +45,7 @@ function DragHandle({ listeners, attributes }: { listeners: DraggableSyntheticLi
       {...attributes}
       className="w-7 h-7 flex items-center justify-center text-slate-300 hover:text-slate-400 cursor-grab active:cursor-grabbing touch-none"
       tabIndex={-1}
-      aria-label="Drag to reorder"
+      aria-label="Arrastrar para reordenar"
     >
       <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
         <circle cx="4" cy="3" r="1.2" />
@@ -151,11 +151,11 @@ function ExerciseCardContent({
       </div>
 
       <div className="grid grid-cols-2 gap-2">
-        <Input label="Sets" type="number" min="1" value={ex.sets?.toString() ?? ''} onChange={e => onUpdate(ex.id, { sets: parseInt(e.target.value) || null })} />
+        <Input label="Series" type="number" min="1" value={ex.sets?.toString() ?? ''} onChange={e => onUpdate(ex.id, { sets: parseInt(e.target.value) || null })} />
         <Input label="Reps" type="number" min="1" value={ex.reps?.toString() ?? ''} onChange={e => onUpdate(ex.id, { reps: parseInt(e.target.value) || null })} />
-        <Input label="Target weight (kg)" type="number" step="0.5" value={ex.target_weight?.toString() ?? ''} onChange={e => onUpdate(ex.id, { target_weight: parseFloat(e.target.value) || null })} />
-        <Input label="Rest (sec)" type="number" value={ex.rest_seconds?.toString() ?? ''} onChange={e => onUpdate(ex.id, { rest_seconds: parseInt(e.target.value) || null })} />
-        <Input label="Duration (sec)" type="number" value={ex.duration_seconds?.toString() ?? ''} onChange={e => onUpdate(ex.id, { duration_seconds: parseInt(e.target.value) || null })} className="col-span-2" />
+        <Input label="Peso objetivo (kg)" type="number" step="0.5" value={ex.target_weight?.toString() ?? ''} onChange={e => onUpdate(ex.id, { target_weight: parseFloat(e.target.value) || null })} />
+        <Input label="Descanso (seg)" type="number" value={ex.rest_seconds?.toString() ?? ''} onChange={e => onUpdate(ex.id, { rest_seconds: parseInt(e.target.value) || null })} />
+        <Input label="Duración (seg)" type="number" value={ex.duration_seconds?.toString() ?? ''} onChange={e => onUpdate(ex.id, { duration_seconds: parseInt(e.target.value) || null })} className="col-span-2" />
       </div>
 
       {blockNames.length > 0 && (
@@ -165,7 +165,7 @@ function ExerciseCardContent({
             onChange={e => onUpdate(ex.id, { block_name: e.target.value || null })}
             className="w-full text-xs text-slate-500 border border-slate-200 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-orange-400"
           >
-            <option value="">No block</option>
+            <option value="">Sin bloque</option>
             {blockNames.map(bn => (
               <option key={bn} value={bn}>{bn}</option>
             ))}
@@ -237,7 +237,7 @@ function SortableBlock({
         <div className="w-2 h-2 rounded-full bg-orange-400 shrink-0" />
         <h3 className="font-semibold text-slate-800 flex-1">{blockName}</h3>
         <span className="text-xs text-slate-400">{blockIdx + 1}/{blockCount}</span>
-        <Button size="sm" variant="outline" onClick={() => onAddExercise(blockName)}>+ Add</Button>
+        <Button size="sm" variant="outline" onClick={() => onAddExercise(blockName)}>+ Agregar</Button>
         <button
           onClick={() => onDeleteBlock(blockName)}
           className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-500"
@@ -264,7 +264,7 @@ function SortableBlock({
 
         {exercises.length === 0 && (
           <div className="border border-dashed border-slate-300 rounded-xl p-4 text-center text-sm text-slate-400">
-            No exercises in this block.
+            Sin ejercicios en este bloque.
           </div>
         )}
       </div>
@@ -440,10 +440,10 @@ export function PlanEditor({ date, plan, allExercises, allPlans, onSaved }: Prop
           method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
         });
       }
-      toast('Plan saved!');
+      toast('¡Plan guardado!');
       onSaved();
     } catch {
-      toast('Failed to save plan', 'error');
+      toast('Error al guardar el plan', 'error');
     } finally {
       setSaving(false);
     }
@@ -497,7 +497,7 @@ export function PlanEditor({ date, plan, allExercises, allPlans, onSaved }: Prop
                     <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
                     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                   </svg>
-                  Copy
+                  Copiar
                 </button>
               )}
               <span className="text-slate-400 text-xs">{metaExpanded ? '∧' : '∨'}</span>
@@ -517,17 +517,17 @@ export function PlanEditor({ date, plan, allExercises, allPlans, onSaved }: Prop
                       <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
                       <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                     </svg>
-                    Copy to days
+                    Copiar a días
                   </button>
                 )}
               </div>
-              <Input label="Workout name" placeholder="e.g. Push Day A" value={name} onChange={e => setName(e.target.value)} />
-              <Textarea label="Objective" placeholder="Goals for this session..." value={objective} rows={2} onChange={e => setObjective(e.target.value)} />
+              <Input label="Nombre del entreno" placeholder="ej. Día de Empuje A" value={name} onChange={e => setName(e.target.value)} />
+              <Textarea label="Objetivo" placeholder="Objetivos de esta sesión..." value={objective} rows={2} onChange={e => setObjective(e.target.value)} />
               <div className="grid grid-cols-2 gap-2">
-                <Input label="Start time" type="time" value={startTime} onChange={e => setStartTime(e.target.value)} />
-                <Input label="End time" type="time" value={endTime} onChange={e => setEndTime(e.target.value)} />
+                <Input label="Hora inicio" type="time" value={startTime} onChange={e => setStartTime(e.target.value)} />
+                <Input label="Hora fin" type="time" value={endTime} onChange={e => setEndTime(e.target.value)} />
               </div>
-              <Textarea label="General notes" placeholder="Any extra notes..." value={notes} rows={2} onChange={e => setNotes(e.target.value)} />
+              <Textarea label="Notas generales" placeholder="Notas adicionales..." value={notes} rows={2} onChange={e => setNotes(e.target.value)} />
             </div>
           )}
         </div>
@@ -536,9 +536,9 @@ export function PlanEditor({ date, plan, allExercises, allPlans, onSaved }: Prop
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-slate-800">
-              {blockNames.length > 0 ? 'Ungrouped' : 'Exercises'}
+              {blockNames.length > 0 ? 'Sin grupo' : 'Ejercicios'}
             </h3>
-            <Button size="sm" variant="outline" onClick={() => setPickerForBlock(null)}>+ Add exercise</Button>
+            <Button size="sm" variant="outline" onClick={() => setPickerForBlock(null)}>+ Agregar ejercicio</Button>
           </div>
 
           <SortableContext items={ungroupedIds} strategy={verticalListSortingStrategy}>
@@ -559,7 +559,7 @@ export function PlanEditor({ date, plan, allExercises, allPlans, onSaved }: Prop
 
           {ungroupedExercises.length === 0 && (
             <div className="bg-white rounded-2xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-400">
-              No exercises yet. Add one above.
+              Sin ejercicios. Agregá uno arriba.
             </div>
           )}
         </div>
@@ -592,8 +592,8 @@ export function PlanEditor({ date, plan, allExercises, allPlans, onSaved }: Prop
         {showAddBlock ? (
           <div className="flex gap-2 items-end">
             <Input
-              label="Block name"
-              placeholder="e.g. Warm-up, Strength, Accessory"
+              label="Nombre del bloque"
+              placeholder="ej. Calentamiento, Fuerza, Accesorios"
               value={newBlockName}
               onChange={e => setNewBlockName(e.target.value)}
               onKeyDown={e => {
@@ -603,8 +603,8 @@ export function PlanEditor({ date, plan, allExercises, allPlans, onSaved }: Prop
               autoFocus
               className="flex-1"
             />
-            <Button size="sm" onClick={addBlock} disabled={!newBlockName.trim()}>Add</Button>
-            <Button size="sm" variant="outline" onClick={() => { setShowAddBlock(false); setNewBlockName(''); }}>Cancel</Button>
+            <Button size="sm" onClick={addBlock} disabled={!newBlockName.trim()}>Agregar</Button>
+            <Button size="sm" variant="outline" onClick={() => { setShowAddBlock(false); setNewBlockName(''); }}>Cancelar</Button>
           </div>
         ) : (
           <button
@@ -612,13 +612,13 @@ export function PlanEditor({ date, plan, allExercises, allPlans, onSaved }: Prop
             className="flex items-center justify-center gap-2 text-sm text-slate-500 hover:text-orange-600 border border-dashed border-slate-300 hover:border-orange-300 rounded-2xl px-4 py-3 transition-colors"
           >
             <span className="text-base leading-none font-medium">+</span>
-            Add block
+            Agregar bloque
           </button>
         )}
 
         {muscleGroupEntries.length > 0 && (
           <div className="bg-orange-50 rounded-2xl border border-orange-100 p-4">
-            <h3 className="text-xs font-semibold text-orange-700 uppercase tracking-wide mb-2">Muscle groups this session</h3>
+            <h3 className="text-xs font-semibold text-orange-700 uppercase tracking-wide mb-2">Grupos musculares esta sesión</h3>
             <div className="flex flex-wrap gap-2">
               {muscleGroupEntries.map(([mg, count]) => (
                 <div key={mg} className="flex items-center gap-1.5 bg-white rounded-full px-3 py-1 border border-orange-100 text-sm">
@@ -631,7 +631,7 @@ export function PlanEditor({ date, plan, allExercises, allPlans, onSaved }: Prop
         )}
 
         <Button onClick={save} loading={saving} size="lg" className="w-full">
-          Save Plan
+          Guardar Plan
         </Button>
 
         {/* Drag overlay — shows floating card while dragging an exercise */}

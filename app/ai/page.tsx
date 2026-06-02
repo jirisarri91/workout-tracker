@@ -38,28 +38,28 @@ export default function AICoachPage() {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">AI Coach</h1>
+        <h1 className="text-2xl font-bold text-slate-900">Entrenador IA</h1>
         <p className="text-sm text-slate-500 mt-1">
-          Get recommendations, or ask me to create templates, workout plans, and mesocycles.
+          Obtené recomendaciones, o pedime que cree plantillas, planes de entreno y mesociclos.
         </p>
       </div>
 
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 flex flex-col gap-3">
         <Textarea
-          label="Ask something specific (optional)"
-          placeholder="e.g. Create a push day template, plan a leg workout for tomorrow, create a 6-week hypertrophy mesocycle, how should I adjust my squats?"
+          label="Preguntá algo específico (opcional)"
+          placeholder="ej. Creá una plantilla de empuje, planificá un entreno de piernas para mañana, creá un mesociclo de hipertrofia de 6 semanas, ¿cómo debería ajustar mis sentadillas?"
           value={prompt}
           rows={3}
           onChange={e => setPrompt(e.target.value)}
         />
         <Button onClick={askAI} loading={loading} size="lg" className="w-full">
-          {loading ? 'Analyzing your workouts...' : '🤖 Get Recommendations'}
+          {loading ? 'Analizando tus entrenos...' : '🤖 Obtener Recomendaciones'}
         </Button>
       </div>
 
       {response && (
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
-          <h2 className="font-semibold text-slate-800 mb-3">AI Coach Says:</h2>
+          <h2 className="font-semibold text-slate-800 mb-3">El Entrenador IA dice:</h2>
           <div className="prose prose-sm max-w-none text-slate-700 whitespace-pre-wrap leading-relaxed">
             {response}
           </div>
@@ -68,12 +68,12 @@ export default function AICoachPage() {
 
       {!response && !loading && (
         <div className="bg-orange-50 rounded-2xl border border-orange-100 p-4 text-sm text-orange-700">
-          <p className="font-medium mb-1">💡 Tips for best results:</p>
+          <p className="font-medium mb-1">💡 Consejos para mejores resultados:</p>
           <ul className="list-disc list-inside space-y-1 text-orange-600">
-            <li>Set your fitness goals on the Home screen</li>
-            <li>Ask me to create a template, plan a workout for a date, or build a mesocycle</li>
-            <li>Track your workouts consistently for better recommendations</li>
-            <li>Record actual weights and observations after each exercise</li>
+            <li>Configurá tus objetivos de fitness en la pantalla de Inicio</li>
+            <li>Pedime que cree una plantilla, planifique un entreno para una fecha, o arme un mesociclo</li>
+            <li>Registrá tus entrenos consistentemente para mejores recomendaciones</li>
+            <li>Anotá los pesos reales y observaciones después de cada ejercicio</li>
           </ul>
         </div>
       )}

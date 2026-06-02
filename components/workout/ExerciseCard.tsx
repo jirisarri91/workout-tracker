@@ -18,9 +18,9 @@ interface Props {
 }
 
 const STATUS_CONFIG: Record<ExerciseStatus, { label: string; color: 'green' | 'red' | 'yellow'; emoji: string }> = {
-  done: { label: 'Done', color: 'green', emoji: '✓' },
-  not_done: { label: 'Skipped', color: 'red', emoji: '✕' },
-  replaced: { label: 'Replaced', color: 'yellow', emoji: '↔' },
+  done: { label: 'Listo', color: 'green', emoji: '✓' },
+  not_done: { label: 'Omitido', color: 'red', emoji: '✕' },
+  replaced: { label: 'Reemplazado', color: 'yellow', emoji: '↔' },
 };
 
 export function ExerciseCard({ planExercise, sessionExercise, allExercises, sessionId, onEnsureSession, onUpdated, suggestion }: Props) {
@@ -74,20 +74,20 @@ export function ExerciseCard({ planExercise, sessionExercise, allExercises, sess
         return;
       }
       await upsertSessionExercise({ status });
-    } catch { toast('Failed to save', 'error'); }
+    } catch { toast('Error al guardar', 'error'); }
   }
 
   async function handleReplace(ex: Exercise) {
     try {
       await upsertSessionExercise({ status: 'replaced', replaced_exercise_id: ex.id });
-    } catch { toast('Failed to save', 'error'); }
+    } catch { toast('Error al guardar', 'error'); }
   }
 
   function scheduleFieldSave(patch: Partial<WorkoutSessionExercise>) {
     if (saveTimeout.current) clearTimeout(saveTimeout.current);
     saveTimeout.current = setTimeout(async () => {
       try { await upsertSessionExercise(patch); }
-      catch { toast('Failed to save', 'error'); }
+      catch { toast('Error al guardar', 'error'); }
     }, 700);
   }
 
@@ -115,7 +115,7 @@ export function ExerciseCard({ planExercise, sessionExercise, allExercises, sess
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-semibold text-slate-900 text-sm">{displayExercise.name}</span>
             {replacedExercise && (
-              <Badge color="yellow">replaces {exercise.name}</Badge>
+              <Badge color="yellow">reemplaza a {exercise.name}</Badge>
             )}
             {isPR && (
               <span className="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full font-semibold">PR 🏆</span>
@@ -150,15 +150,15 @@ export function ExerciseCard({ planExercise, sessionExercise, allExercises, sess
       {/* Suggestion row */}
       {suggestion && (suggestion.lastWeight || suggestion.suggestedWeight) && (
         <div className="px-4 pb-1 flex items-center gap-3 text-xs text-slate-400">
-          {suggestion.lastWeight && <span>Last: <span className="text-slate-600 font-medium">{suggestion.lastWeight}kg</span></span>}
-          {suggestion.suggestedWeight && <span>Suggested: <span className="text-orange-500 font-medium">{suggestion.suggestedWeight}kg</span></span>}
+          {suggestion.lastWeight && <span>Última: <span className="text-slate-600 font-medium">{suggestion.lastWeight}kg</span></span>}
+          {suggestion.suggestedWeight && <span>Sugerida: <span className="text-orange-500 font-medium">{suggestion.suggestedWeight}kg</span></span>}
         </div>
       )}
 
       {/* Row 2: sets, reps, weights */}
       <div className="grid grid-cols-4 gap-2 px-4 pb-2 text-xs">
         <div className="flex flex-col gap-0.5">
-          <span className="text-slate-400 font-medium">Sets</span>
+          <span className="text-slate-400 font-medium">Series</span>
           <span className="text-slate-800 font-semibold">{sets ?? '—'}</span>
         </div>
         <div className="flex flex-col gap-0.5">
@@ -166,11 +166,11 @@ export function ExerciseCard({ planExercise, sessionExercise, allExercises, sess
           <span className="text-slate-800 font-semibold">{reps ?? '—'}</span>
         </div>
         <div className="flex flex-col gap-0.5">
-          <span className="text-slate-400 font-medium">Target kg</span>
+          <span className="text-slate-400 font-medium">Obj. kg</span>
           <span className="text-slate-800 font-semibold">{targetWeight ?? '—'}</span>
         </div>
         <div className="flex flex-col gap-0.5">
-          <span className="text-slate-400 font-medium">Time</span>
+          <span className="text-slate-400 font-medium">Tiempo</span>
           <span className="text-slate-800 font-semibold">{fmtDuration(targetDuration) ?? '—'}</span>
         </div>
       </div>
@@ -180,7 +180,7 @@ export function ExerciseCard({ planExercise, sessionExercise, allExercises, sess
         <div className="flex gap-2">
           <div className="w-28 shrink-0">
             <Input
-              label="Actual kg"
+              label="Kg real"
               type="number"
               step="0.5"
               placeholder={targetWeight?.toString() ?? '0'}
@@ -194,8 +194,8 @@ export function ExerciseCard({ planExercise, sessionExercise, allExercises, sess
           </div>
           <div className="flex-1">
             <Textarea
-              label="Observations"
-              placeholder="How did it feel?"
+              label="Observaciones"
+              placeholder="¿Cómo se sintió?"
               value={localObs}
               rows={2}
               className="text-sm"

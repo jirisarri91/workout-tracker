@@ -23,7 +23,7 @@ const STATUS_DOT: Record<DayStatus, string> = {
   planned: 'bg-slate-300',
 };
 
-const DAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+const DAYS = ['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá'];
 
 export function WorkoutCalendar({ sessions, plans, onSessionChange }: Props) {
   const [viewDate, setViewDate] = useState(new Date());
@@ -108,15 +108,20 @@ export function WorkoutCalendar({ sessions, plans, onSessionChange }: Props) {
 
       {/* Legend */}
       <div className="flex flex-wrap gap-3 px-4 pb-3 text-xs text-slate-500">
-        {(['done', 'skipped', 'planned', 'sport'] as DayStatus[]).map(s => (
+        {([
+          ['done', 'Listo'],
+          ['skipped', 'Omitido'],
+          ['planned', 'Planificado'],
+          ['sport', 'Deporte'],
+        ] as [DayStatus, string][]).map(([s, label]) => (
           <span key={s} className="flex items-center gap-1">
             <span className={`w-2 h-2 rounded-full ${STATUS_DOT[s]}`} />
-            {s.charAt(0).toUpperCase() + s.slice(1)}
+            {label}
           </span>
         ))}
         <span className="flex items-center gap-1">
           <span className="w-2 h-2 rounded-full bg-cyan-400" />
-          Swim/Walk/Row
+          Nado/Caminata/Remo
         </span>
       </div>
 

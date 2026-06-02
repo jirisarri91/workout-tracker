@@ -67,7 +67,7 @@ export function ExerciseForm({ exercise, allMuscleGroups = [], onSaved, onClose 
   }
 
   async function save() {
-    if (!name.trim()) { toast('Exercise name is required', 'error'); return; }
+    if (!name.trim()) { toast('El nombre del ejercicio es requerido', 'error'); return; }
     const pendingGroups = mgInput.trim() ? [...muscleGroups, mgInput.trim()] : muscleGroups;
     setSaving(true);
     try {
@@ -86,21 +86,21 @@ export function ExerciseForm({ exercise, allMuscleGroups = [], onSaved, onClose 
           method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
         });
       }
-      toast(exercise ? 'Exercise updated' : 'Exercise created');
+      toast(exercise ? 'Ejercicio actualizado' : 'Ejercicio creado');
       onSaved();
       onClose();
-    } catch { toast('Failed to save', 'error'); }
+    } catch { toast('Error al guardar', 'error'); }
     finally { setSaving(false); }
   }
 
   return (
-    <Modal open onClose={onClose} title={exercise ? 'Edit Exercise' : 'New Exercise'}>
+    <Modal open onClose={onClose} title={exercise ? 'Editar Ejercicio' : 'Nuevo Ejercicio'}>
       <div className="flex flex-col gap-3">
-        <Input label="Name *" placeholder="e.g. Barbell Squat" value={name} onChange={e => setName(e.target.value)} />
+        <Input label="Nombre *" placeholder="ej. Sentadilla con barra" value={name} onChange={e => setName(e.target.value)} />
 
         {/* Muscle groups tag input */}
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-slate-700">Muscle groups</label>
+          <label className="text-sm font-medium text-slate-700">Grupos musculares</label>
           <div
             className="min-h-10 px-2 py-1.5 rounded-xl border border-slate-200 bg-white flex flex-wrap gap-1.5 items-center cursor-text focus-within:ring-2 focus-within:ring-orange-400 focus-within:border-transparent"
             onClick={() => mgInputRef.current?.focus()}
@@ -120,7 +120,7 @@ export function ExerciseForm({ exercise, allMuscleGroups = [], onSaved, onClose 
                 onKeyDown={handleMgKeyDown}
                 onFocus={() => setShowSuggestions(true)}
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-                placeholder={muscleGroups.length === 0 ? 'e.g. Quadriceps, Hamstrings…' : ''}
+                placeholder={muscleGroups.length === 0 ? 'ej. Cuádriceps, Isquiotibiales…' : ''}
                 className="w-full text-sm bg-transparent outline-none py-0.5 placeholder:text-slate-400"
               />
               {showSuggestions && suggestions.length > 0 && (
@@ -139,12 +139,12 @@ export function ExerciseForm({ exercise, allMuscleGroups = [], onSaved, onClose 
               )}
             </div>
           </div>
-          <p className="text-xs text-slate-400">Press Enter or comma to add a new group</p>
+          <p className="text-xs text-slate-400">Presioná Enter o coma para agregar un grupo</p>
         </div>
 
         <Textarea
-          label="Instructions"
-          placeholder="How to perform the exercise..."
+          label="Instrucciones"
+          placeholder="Cómo realizar el ejercicio..."
           value={instructions}
           rows={5}
           onChange={e => setInstructions(e.target.value)}
@@ -152,24 +152,24 @@ export function ExerciseForm({ exercise, allMuscleGroups = [], onSaved, onClose 
 
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
-            <label className="text-sm font-medium text-slate-700">Resources / Videos</label>
+            <label className="text-sm font-medium text-slate-700">Recursos / Videos</label>
             <button
               onClick={() => setResources(rs => [...rs, { title: '', url: '' }])}
               className="text-xs text-orange-500 font-medium hover:underline"
             >
-              + Add link
+              + Agregar enlace
             </button>
           </div>
           {resources.map((r, i) => (
             <div key={i} className="flex flex-col gap-1.5 p-3 bg-slate-50 rounded-xl">
-              <Input placeholder="Title (e.g. Tutorial Video)" value={r.title} onChange={e => updateResource(i, 'title', e.target.value)} />
+              <Input placeholder="Título (ej. Video tutorial)" value={r.title} onChange={e => updateResource(i, 'title', e.target.value)} />
               <Input placeholder="URL (https://...)" type="url" value={r.url} onChange={e => updateResource(i, 'url', e.target.value)} />
               {resources.length > 1 && (
                 <button
                   onClick={() => setResources(rs => rs.filter((_, idx) => idx !== i))}
                   className="text-xs text-red-400 hover:text-red-600 self-end"
                 >
-                  Remove
+                  Eliminar
                 </button>
               )}
             </div>
@@ -177,8 +177,8 @@ export function ExerciseForm({ exercise, allMuscleGroups = [], onSaved, onClose 
         </div>
 
         <div className="flex gap-2 pt-2">
-          <Button variant="secondary" className="flex-1" onClick={onClose}>Cancel</Button>
-          <Button className="flex-1" loading={saving} onClick={save}>Save</Button>
+          <Button variant="secondary" className="flex-1" onClick={onClose}>Cancelar</Button>
+          <Button className="flex-1" loading={saving} onClick={save}>Guardar</Button>
         </div>
       </div>
     </Modal>

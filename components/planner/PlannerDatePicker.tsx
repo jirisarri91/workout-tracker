@@ -12,7 +12,7 @@ interface Props {
   onSelect: (date: string) => void;
 }
 
-const DAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+const DAYS = ['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá'];
 
 export function PlannerDatePicker({ plans, selectedDate, onSelect }: Props) {
   const [viewDate, setViewDate] = useState(new Date());

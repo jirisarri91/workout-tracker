@@ -25,9 +25,9 @@ export function SummaryCards({ plans, sessions }: Props) {
     <div className="flex flex-col gap-3">
       {/* Stats row */}
       <div className="grid grid-cols-3 gap-3">
-        <StatCard label="Workouts" value={totalDone} color="text-green-600" />
-        <StatCard label="Streak" value={`${streak}🔥`} color="text-orange-500" />
-        <StatCard label="Adherence" value={`${adherence}%`} color={adherence >= 80 ? 'text-green-600' : adherence >= 50 ? 'text-yellow-500' : 'text-red-500'} />
+        <StatCard label="Entrenos" value={totalDone} color="text-green-600" />
+        <StatCard label="Racha" value={`${streak}🔥`} color="text-orange-500" />
+        <StatCard label="Adherencia" value={`${adherence}%`} color={adherence >= 80 ? 'text-green-600' : adherence >= 50 ? 'text-yellow-500' : 'text-red-500'} />
       </div>
 
       {/* Next workout */}
@@ -35,14 +35,14 @@ export function SummaryCards({ plans, sessions }: Props) {
         <Link href={`/workout/${nextPlan.date}`} className="block">
           <div className="bg-orange-500 text-white rounded-2xl p-4 shadow-sm">
             <p className="text-xs font-medium text-orange-100 mb-1">
-              {nextPlan.date === today ? 'Today' : format(parseISO(nextPlan.date), 'EEEE, MMM d')}
+              {nextPlan.date === today ? 'Hoy' : format(parseISO(nextPlan.date), 'EEEE, MMM d')}
             </p>
-            <p className="font-semibold text-lg">{nextPlan.name ?? 'Workout'}</p>
+            <p className="font-semibold text-lg">{nextPlan.name ?? 'Entreno'}</p>
             {nextPlan.objective && (
               <p className="text-sm text-orange-100 mt-1 line-clamp-2">{nextPlan.objective}</p>
             )}
             <div className="mt-3 flex items-center gap-1 text-sm text-orange-100">
-              <span>Open workout</span>
+              <span>Abrir entreno</span>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
                 <path d="m9 18 6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
@@ -56,8 +56,8 @@ export function SummaryCards({ plans, sessions }: Props) {
         <Link href={`/workout/${lastSession.date}`} className="block">
           <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
             <div className="flex items-center justify-between mb-1">
-              <p className="text-xs font-medium text-slate-400">Last workout</p>
-              <Badge color="green">Done</Badge>
+              <p className="text-xs font-medium text-slate-400">Último entreno</p>
+              <Badge color="green">Listo</Badge>
             </div>
             <p className="font-medium text-slate-800">
               {format(parseISO(lastSession.date), 'EEEE, MMM d')}
@@ -71,9 +71,9 @@ export function SummaryCards({ plans, sessions }: Props) {
 
       {!nextPlan && !lastSession && (
         <div className="bg-white rounded-2xl p-6 border border-dashed border-slate-200 text-center">
-          <p className="text-slate-400 text-sm">No workouts yet.</p>
+          <p className="text-slate-400 text-sm">Sin entrenos todavía.</p>
           <Link href="/planner" className="text-orange-500 text-sm font-medium mt-1 inline-block">
-            Plan your first workout →
+            Planificá tu primer entreno →
           </Link>
         </div>
       )}

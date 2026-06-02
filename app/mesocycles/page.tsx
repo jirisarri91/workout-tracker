@@ -19,14 +19,14 @@ export default function MesocyclesPage() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-900">Mesocycles</h1>
+        <h1 className="text-2xl font-bold text-slate-900">Mesociclos</h1>
         <div className="flex gap-2">
-          <Button size="sm" variant="outline" onClick={() => { setShowAI(true); setShowForm(false); }}>AI Plan</Button>
-          <Button size="sm" onClick={() => { setShowForm(true); setEditId(null); setShowAI(false); }}>+ New</Button>
+          <Button size="sm" variant="outline" onClick={() => { setShowAI(true); setShowForm(false); }}>Plan IA</Button>
+          <Button size="sm" onClick={() => { setShowForm(true); setEditId(null); setShowAI(false); }}>+ Nuevo</Button>
         </div>
       </div>
 
-      <p className="text-sm text-slate-400">Training blocks (4–8 weeks) with structured goals and volume progression.</p>
+      <p className="text-sm text-slate-400">Bloques de entrenamiento (4–8 semanas) con objetivos estructurados y progresión de volumen.</p>
 
       {(showForm || editId) && (
         <MesocycleForm
@@ -51,7 +51,7 @@ export default function MesocyclesPage() {
             await fetch('/api/mesocycles', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(meso) });
             await mutate();
             setShowAI(false);
-            toast('Mesocycle created!', 'success');
+            toast('¡Mesociclo creado!', 'success');
           }}
           onCancel={() => setShowAI(false)}
         />
@@ -59,8 +59,8 @@ export default function MesocyclesPage() {
 
       {mesocycles.length === 0 && !showForm && !showAI && (
         <div className="bg-white rounded-2xl border border-dashed border-slate-200 p-8 text-center">
-          <p className="text-slate-400 text-sm mb-3">No mesocycles yet.</p>
-          <p className="text-slate-400 text-xs">Create structured training blocks with progressive overload targets.</p>
+          <p className="text-slate-400 text-sm mb-3">Sin mesociclos todavía.</p>
+          <p className="text-slate-400 text-xs">Creá bloques de entrenamiento estructurados con objetivos de sobrecarga progresiva.</p>
         </div>
       )}
 
@@ -92,10 +92,10 @@ function MesocycleCard({ mesocycle: m, onEdit, onDelete }: { mesocycle: Mesocycl
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-semibold text-slate-900">{m.name}</span>
-            {isActive && <span className="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full font-medium">Active</span>}
+            {isActive && <span className="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full font-medium">Activo</span>}
           </div>
           <p className="text-xs text-slate-400 mt-0.5">
-            {format(parseISO(m.start_date), 'MMM d')} – {format(parseISO(m.end_date), 'MMM d, yyyy')} · {weeks} week{weeks !== 1 ? 's' : ''}
+            {format(parseISO(m.start_date), 'MMM d')} – {format(parseISO(m.end_date), 'MMM d, yyyy')} · {weeks} semana{weeks !== 1 ? 's' : ''}
           </p>
           {m.goal && <p className="text-sm text-slate-600 mt-1.5">{m.goal}</p>}
           {m.notes && <p className="text-xs text-slate-400 mt-1 line-clamp-2">{m.notes}</p>}
@@ -139,17 +139,17 @@ function MesocycleForm({ initial, onSave, onCancel }: {
 
   return (
     <div className="bg-white rounded-2xl border border-orange-200 shadow-sm p-4 flex flex-col gap-3">
-      <h3 className="font-semibold text-slate-800">{initial ? 'Edit' : 'New'} Mesocycle</h3>
-      <Input label="Name" placeholder="e.g. Strength Block 1" value={name} onChange={e => setName(e.target.value)} />
+      <h3 className="font-semibold text-slate-800">{initial ? 'Editar' : 'Nuevo'} Mesociclo</h3>
+      <Input label="Nombre" placeholder="ej. Bloque de Fuerza 1" value={name} onChange={e => setName(e.target.value)} />
       <div className="grid grid-cols-2 gap-3">
-        <Input label="Start date" type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
-        <Input label="End date" type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
+        <Input label="Fecha inicio" type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
+        <Input label="Fecha fin" type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
       </div>
-      <Input label="Goal" placeholder="e.g. Build maximal strength, increase 1RM" value={goal} onChange={e => setGoal(e.target.value)} />
-      <Textarea label="Notes / week-by-week plan" rows={4} placeholder="Week 1: 3×8 @ 70%..." value={notes} onChange={e => setNotes(e.target.value)} />
+      <Input label="Objetivo" placeholder="ej. Desarrollar fuerza máxima, aumentar 1RM" value={goal} onChange={e => setGoal(e.target.value)} />
+      <Textarea label="Notas / plan semana a semana" rows={4} placeholder="Semana 1: 3×8 @ 70%..." value={notes} onChange={e => setNotes(e.target.value)} />
       <div className="flex gap-2">
-        <Button onClick={submit} loading={saving} disabled={!name || !startDate || !endDate}>Save</Button>
-        <Button variant="ghost" onClick={onCancel}>Cancel</Button>
+        <Button onClick={submit} loading={saving} disabled={!name || !startDate || !endDate}>Guardar</Button>
+        <Button variant="ghost" onClick={onCancel}>Cancelar</Button>
       </div>
     </div>
   );
@@ -208,18 +208,18 @@ Be specific and practical.`,
 
   return (
     <div className="bg-white rounded-2xl border border-orange-200 shadow-sm p-4 flex flex-col gap-3">
-      <h3 className="font-semibold text-slate-800">AI Mesocycle Generator</h3>
-      <Input label="Start date" type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
-      <Input label="Duration (weeks)" type="number" min="4" max="16" value={weeks} onChange={e => setWeeks(e.target.value)} />
+      <h3 className="font-semibold text-slate-800">Generador de Mesociclos IA</h3>
+      <Input label="Fecha inicio" type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
+      <Input label="Duración (semanas)" type="number" min="4" max="16" value={weeks} onChange={e => setWeeks(e.target.value)} />
       <Textarea
-        label="Goal & context"
-        placeholder="e.g. Build strength for powerlifting meet, 4 days/week, focus on squat and deadlift..."
+        label="Objetivo y contexto"
+        placeholder="ej. Desarrollar fuerza para competencia de powerlifting, 4 días/semana, foco en sentadilla y peso muerto..."
         rows={3}
         value={intent}
         onChange={e => setIntent(e.target.value)}
       />
       {!preview && (
-        <Button onClick={generate} loading={loading} disabled={!intent}>Generate with AI</Button>
+        <Button onClick={generate} loading={loading} disabled={!intent}>Generar con IA</Button>
       )}
       {preview && (
         <div className="bg-slate-50 rounded-xl p-3 text-sm text-slate-700 whitespace-pre-wrap leading-relaxed max-h-60 overflow-y-auto">
@@ -229,20 +229,20 @@ Be specific and practical.`,
       {preview && !loading && (
         <div className="flex gap-2">
           <Button onClick={() => onCreated({
-            name: `${weeks}-Week Block`,
+            name: `Bloque de ${weeks} Semanas`,
             start_date: startDate,
             end_date: buildEnd(),
             goal: intent,
             notes: preview,
           })}>
-            Save Mesocycle
+            Guardar Mesociclo
           </Button>
-          <Button variant="ghost" onClick={() => setPreview('')}>Regenerate</Button>
-          <Button variant="ghost" onClick={onCancel}>Cancel</Button>
+          <Button variant="ghost" onClick={() => setPreview('')}>Regenerar</Button>
+          <Button variant="ghost" onClick={onCancel}>Cancelar</Button>
         </div>
       )}
       {!preview && (
-        <Button variant="ghost" onClick={onCancel}>Cancel</Button>
+        <Button variant="ghost" onClick={onCancel}>Cancelar</Button>
       )}
     </div>
   );

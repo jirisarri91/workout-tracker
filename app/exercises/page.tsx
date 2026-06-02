@@ -10,7 +10,7 @@ export default function ExercisesPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-bold text-slate-900">Exercise Library</h1>
+      <h1 className="text-2xl font-bold text-slate-900">Biblioteca de Ejercicios</h1>
       <ExerciseList exercises={exercises} onChanged={mutate} />
     </div>
   );

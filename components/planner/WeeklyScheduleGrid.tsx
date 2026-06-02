@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
 
 // 0=Sun, 1=Mon, ..., 6=Sat — matches JS Date.getDay()
-const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const DAYS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 const DAY_FULL = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 interface Props {
@@ -51,10 +51,10 @@ export function WeeklyScheduleGrid({ slots, templates, onSaved }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ slots: slotPayload }),
       });
-      toast('Schedule saved!');
+      toast('¡Horario guardado!');
       onSaved();
     } catch {
-      toast('Failed to save schedule', 'error');
+      toast('Error al guardar el horario', 'error');
     } finally {
       setSaving(false);
     }
@@ -76,14 +76,14 @@ export function WeeklyScheduleGrid({ slots, templates, onSaved }: Props) {
                 </div>
                 <div className="flex-1">
                   {templates.length === 0 ? (
-                    <span className="text-sm text-slate-400 italic">No templates yet</span>
+                    <span className="text-sm text-slate-400 italic">Sin plantillas</span>
                   ) : (
                     <select
                       value={selectedId ?? ''}
                       onChange={e => setDraft(prev => ({ ...prev, [d]: e.target.value || null }))}
                       className="w-full text-sm border border-slate-200 rounded-xl px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-orange-400 text-slate-700"
                     >
-                      <option value="">Rest day</option>
+                      <option value="">Día de descanso</option>
                       {templates.map(t => (
                         <option key={t.id} value={t.id}>{t.name}</option>
                       ))}
@@ -99,7 +99,7 @@ export function WeeklyScheduleGrid({ slots, templates, onSaved }: Props) {
                 )}
                 {!selectedId && (
                   <div className="shrink-0 w-14 text-right">
-                    <span className="text-xs text-slate-300">rest</span>
+                    <span className="text-xs text-slate-300">descanso</span>
                   </div>
                 )}
               </div>
@@ -109,12 +109,12 @@ export function WeeklyScheduleGrid({ slots, templates, onSaved }: Props) {
       </div>
 
       {templates.length > 0 && (
-        <Button onClick={save} loading={saving} className="w-full">Save Schedule</Button>
+        <Button onClick={save} loading={saving} className="w-full">Guardar Horario</Button>
       )}
 
       {templates.length === 0 && (
         <div className="bg-white rounded-2xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-400">
-          Create workout templates first, then assign them to days here.
+          Creá plantillas de entreno primero y luego asignalas a los días aquí.
         </div>
       )}
     </div>

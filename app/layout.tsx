@@ -7,8 +7,8 @@ import { ToastProvider } from '@/components/ui/Toast';
 const geist = Geist({ subsets: ['latin'], variable: '--font-geist-sans' });
 
 export const metadata: Metadata = {
-  title: 'Workout Tracker',
-  description: 'Track and plan your workouts with AI coaching',
+  title: 'Seguimiento de Entrenos',
+  description: 'Seguí y planificá tus entrenos con coaching de IA',
   manifest: '/manifest.json',
 };
 
@@ -22,7 +22,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={geist.variable}>
+    <html lang="es" className={geist.variable}>
       <body className="min-h-screen bg-slate-50">
         <ToastProvider>
           <main className="max-w-lg mx-auto px-4 pt-4 pb-24">

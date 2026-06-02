@@ -27,7 +27,7 @@ export function OrphanedSessionExerciseCard({ sessionExercise, onUpdated }: Prop
         );
         onUpdated();
       } catch {
-        toast('Failed to save', 'error');
+        toast('Error al guardar', 'error');
       }
     }, 700);
   }
@@ -37,14 +37,14 @@ export function OrphanedSessionExerciseCard({ sessionExercise, onUpdated }: Prop
       <div className="p-4 pb-2">
         <span className="font-semibold text-slate-900 text-sm">{exercise.name}</span>
         <div className="flex gap-3 mt-0.5 text-xs text-slate-500">
-          {sessionExercise.sets && <span>{sessionExercise.sets} sets</span>}
+          {sessionExercise.sets && <span>{sessionExercise.sets} series</span>}
           {sessionExercise.reps && <span>{sessionExercise.reps} reps</span>}
         </div>
       </div>
       <div className="px-4 pb-4 flex gap-2">
         <div className="w-28 shrink-0">
           <Input
-            label="Actual kg"
+            label="Kg real"
             type="number"
             step="0.5"
             placeholder="0"
@@ -58,8 +58,8 @@ export function OrphanedSessionExerciseCard({ sessionExercise, onUpdated }: Prop
         </div>
         <div className="flex-1">
           <Textarea
-            label="Observations"
-            placeholder="How did it feel?"
+            label="Observaciones"
+            placeholder="¿Cómo se sintió?"
             value={localObs}
             rows={2}
             className="text-sm"

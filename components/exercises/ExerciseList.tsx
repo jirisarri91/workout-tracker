@@ -53,16 +53,16 @@ export function ExerciseList({ exercises, onChanged }: Props) {
           if (!confirm(data.error)) { setDeleting(null); return; }
           res = await fetch(`/api/exercises/${ex.id}?force=true`, { method: 'DELETE' });
         } else {
-          throw new Error(data.error ?? 'Failed to delete');
+          throw new Error(data.error ?? 'Error al eliminar');
         }
       }
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error ?? 'Failed to delete');
+        throw new Error(data.error ?? 'Error al eliminar');
       }
-      toast('Exercise deleted');
+      toast('Ejercicio eliminado');
       onChanged();
-    } catch (e: any) { toast(e.message || 'Failed to delete', 'error'); }
+    } catch (e: any) { toast(e.message || 'Error al eliminar', 'error'); }
     finally { setDeleting(null); }
   }
 
@@ -72,7 +72,7 @@ export function ExerciseList({ exercises, onChanged }: Props) {
       <div className="flex gap-2">
         <input
           type="search"
-          placeholder="Search exercises..."
+          placeholder="Buscar ejercicios..."
           value={query}
           onChange={e => setQuery(e.target.value)}
           className="flex-1 h-10 px-3 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
@@ -81,7 +81,7 @@ export function ExerciseList({ exercises, onChanged }: Props) {
           size="md"
           onClick={() => { setEditTarget(null); setShowForm(true); }}
         >
-          + New
+          + Nuevo
         </Button>
       </div>
 
@@ -109,7 +109,7 @@ export function ExerciseList({ exercises, onChanged }: Props) {
               onClick={() => setSelectedGroups(new Set())}
               className="px-3 py-1 rounded-full text-xs font-medium border border-slate-200 text-slate-400 hover:text-slate-600 transition-colors"
             >
-              Clear
+              Limpiar
             </button>
           )}
         </div>
@@ -156,7 +156,7 @@ export function ExerciseList({ exercises, onChanged }: Props) {
       ))}
 
       {filtered.length === 0 && (
-        <p className="text-center text-slate-400 py-10 text-sm">No exercises found</p>
+        <p className="text-center text-slate-400 py-10 text-sm">No se encontraron ejercicios</p>
       )}
 
       {showForm && (

@@ -60,8 +60,8 @@ export function WorkoutHeader({ date, session, planObjective, planName, onSessio
       }
       setRunning(true);
       onSessionUpdated();
-      toast('Workout started!');
-    } catch { toast('Failed to start', 'error'); }
+      toast('¡Entreno iniciado!');
+    } catch { toast('Error al iniciar', 'error'); }
     finally { setSaving(false); }
   }
 
@@ -76,8 +76,8 @@ export function WorkoutHeader({ date, session, planObjective, planName, onSessio
       });
       setRunning(false);
       onSessionUpdated();
-      toast('Workout complete! 💪');
-    } catch { toast('Failed to stop', 'error'); }
+      toast('¡Entreno completo! 💪');
+    } catch { toast('Error al finalizar', 'error'); }
     finally { setSaving(false); }
   }
 
@@ -101,7 +101,7 @@ export function WorkoutHeader({ date, session, planObjective, planName, onSessio
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <p className="text-xs font-medium text-slate-400 uppercase tracking-wide">{displayDate}</p>
-          <h1 className="text-lg font-bold text-slate-900 mt-0.5 truncate">{planName ?? 'Workout'}</h1>
+          <h1 className="text-lg font-bold text-slate-900 mt-0.5 truncate">{planName ?? 'Entreno'}</h1>
           {planObjective && (
             <p className="text-sm text-slate-500 mt-1 line-clamp-2">{planObjective}</p>
           )}
@@ -116,17 +116,17 @@ export function WorkoutHeader({ date, session, planObjective, planName, onSessio
           )}
           {!started && (
             <Button size="sm" loading={saving} onClick={startSession}>
-              ▶ Start
+              ▶ Iniciar
             </Button>
           )}
           {started && !finished && (
             <Button size="sm" variant="danger" loading={saving} onClick={stopSession}>
-              ■ Finish
+              ■ Finalizar
             </Button>
           )}
           {finished && (
             <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-lg">
-              ✓ Done
+              ✓ Listo
             </span>
           )}
         </div>
@@ -135,7 +135,7 @@ export function WorkoutHeader({ date, session, planObjective, planName, onSessio
       {/* Notes */}
       <div className="mt-3">
         <Textarea
-          placeholder="Session notes..."
+          placeholder="Notas de la sesión..."
           value={notes}
           rows={2}
           className="text-sm"

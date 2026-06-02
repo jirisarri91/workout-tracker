@@ -35,7 +35,7 @@ export function WeightTracker({ chartOnly = false }: { chartOnly?: boolean } = {
       setWeight('');
       await mutate();
     } catch {
-      toast('Failed to save weight', 'error');
+      toast('Error al guardar el peso', 'error');
     } finally {
       setSaving(false);
     }
@@ -46,7 +46,7 @@ export function WeightTracker({ chartOnly = false }: { chartOnly?: boolean } = {
       await fetch(`/api/weight-entries/${id}`, { method: 'DELETE' });
       await mutate();
     } catch {
-      toast('Failed to delete entry', 'error');
+      toast('Error al eliminar el registro', 'error');
     }
   }
 
@@ -55,15 +55,15 @@ export function WeightTracker({ chartOnly = false }: { chartOnly?: boolean } = {
       {/* Log form */}
       {!chartOnly && (
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
-          <h3 className="font-semibold text-slate-800 mb-3">Log Weight</h3>
+          <h3 className="font-semibold text-slate-800 mb-3">Registrar Peso</h3>
           <div className="flex gap-2 items-end">
             <div className="w-36">
-              <Input label="Date" type="date" value={date} onChange={e => setDate(e.target.value)} />
+              <Input label="Fecha" type="date" value={date} onChange={e => setDate(e.target.value)} />
             </div>
             <div className="w-28">
-              <Input label="Weight (kg)" type="number" step="0.1" placeholder="70.0" value={weight} onChange={e => setWeight(e.target.value)} />
+              <Input label="Peso (kg)" type="number" step="0.1" placeholder="70.0" value={weight} onChange={e => setWeight(e.target.value)} />
             </div>
-            <Button onClick={save} loading={saving} disabled={!weight} className="mb-0.5">Save</Button>
+            <Button onClick={save} loading={saving} disabled={!weight} className="mb-0.5">Guardar</Button>
           </div>
         </div>
       )}
@@ -72,7 +72,7 @@ export function WeightTracker({ chartOnly = false }: { chartOnly?: boolean } = {
       {chartData.length > 0 && (
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-slate-800">Body Weight</h3>
+            <h3 className="font-semibold text-slate-800">Peso Corporal</h3>
             {trend !== null && (
               <span className={`text-sm font-medium ${trend < 0 ? 'text-green-600' : trend > 0 ? 'text-red-500' : 'text-slate-400'}`}>
                 {trend > 0 ? '+' : ''}{trend.toFixed(1)}kg (4 wk)
@@ -86,7 +86,7 @@ export function WeightTracker({ chartOnly = false }: { chartOnly?: boolean } = {
               <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} unit="kg" domain={['auto', 'auto']} />
               <Tooltip
                 contentStyle={{ borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 12 }}
-                formatter={(v) => [`${v} kg`, 'Weight']}
+                formatter={(v) => [`${v} kg`, 'Peso']}
               />
               <Line type="monotone" dataKey="weight" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3, fill: '#3b82f6' }} activeDot={{ r: 5 }} />
             </LineChart>
@@ -97,7 +97,7 @@ export function WeightTracker({ chartOnly = false }: { chartOnly?: boolean } = {
       {/* Log list */}
       {!chartOnly && entries.length > 0 && (
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
-          <h3 className="font-semibold text-slate-800 mb-3">History</h3>
+          <h3 className="font-semibold text-slate-800 mb-3">Historial</h3>
           <div className="flex flex-col gap-2">
             {[...entries].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 10).map(e => (
               <div key={e.id} className="flex items-center justify-between text-sm">

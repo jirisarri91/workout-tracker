@@ -56,7 +56,7 @@ export function ObjectiveEditor() {
       });
       await mutate();
     } catch {
-      toast('Failed to save objectives', 'error');
+      toast('Error al guardar objetivos', 'error');
     } finally {
       setSaving(false);
     }
@@ -81,40 +81,40 @@ export function ObjectiveEditor() {
   return (
     <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-slate-800">My Fitness Objectives</h3>
+        <h3 className="font-semibold text-slate-800">Mis Objetivos de Fitness</h3>
         {saving && <Spinner className="w-4 h-4" />}
       </div>
       <div className="flex flex-col gap-3">
 
         <div className="grid grid-cols-2 gap-3">
           <Input
-            label="Birthday"
+            label="Fecha de nacimiento"
             type="date"
             value={birthday}
             onChange={e => handleChange('bday', e.target.value)}
           />
           <Input
-            label="Height (cm)"
+            label="Altura (cm)"
             type="number"
             min={100}
             max={250}
-            placeholder="e.g. 175"
+            placeholder="ej. 175"
             value={heightCm}
             onChange={e => handleChange('height', e.target.value)}
           />
         </div>
 
         <Textarea
-          label="Goal"
-          placeholder="e.g. Build muscle, lose 5kg, run a 5k..."
+          label="Objetivo"
+          placeholder="ej. Ganar músculo, perder 5kg, correr 5k..."
           value={objective}
           rows={3}
           onChange={e => handleChange('obj', e.target.value)}
         />
 
         <Textarea
-          label="Training Strategy"
-          placeholder="e.g. 4 days/week strength training, progressive overload..."
+          label="Estrategia de Entrenamiento"
+          placeholder="ej. 4 días/semana de entrenamiento de fuerza, sobrecarga progresiva..."
           value={strategy}
           rows={4}
           onChange={e => handleChange('strat', e.target.value)}
@@ -122,8 +122,8 @@ export function ObjectiveEditor() {
 
         <div>
           <Textarea
-            label="Equipment"
-            placeholder={"List the equipment you have access to:\ne.g. Full gym, barbell, dumbbells, pull-up bar, resistance bands, cable machine..."}
+            label="Equipamiento"
+            placeholder={"Listá el equipamiento al que tenés acceso:\nej. Gimnasio completo, barra, mancuernas, barra de dominadas, bandas elásticas, polea..."}
             value={equipment}
             rows={3}
             onChange={e => handleChange('equip', e.target.value)}
@@ -132,15 +132,15 @@ export function ObjectiveEditor() {
 
         <div>
           <Textarea
-            label="Personal Context (for AI)"
-            placeholder={"Help the AI understand your situation:\n• Any injuries or physical limitations?\n• Current activity level (sedentary, lightly active, very active)?\n• How many days/week and hours/day are you available to train?\n• Sleep quality, stress levels, or recovery capacity?\n• Anything else the AI coach should know?"}
+            label="Contexto Personal (para la IA)"
+            placeholder={"Ayudá a la IA a entender tu situación:\n• ¿Tenés lesiones o limitaciones físicas?\n• Nivel de actividad actual (sedentario, levemente activo, muy activo)?\n• ¿Cuántos días/semana y horas/día podés entrenar?\n• ¿Calidad de sueño, niveles de estrés o capacidad de recuperación?\n• ¿Algo más que el entrenador IA debería saber?"}
             value={personalContext}
             rows={6}
             onChange={e => handleChange('context', e.target.value)}
           />
         </div>
 
-        <p className="text-xs text-slate-400">Auto-saved · Used by AI Coach for recommendations</p>
+        <p className="text-xs text-slate-400">Guardado automático · Usado por el Entrenador IA</p>
       </div>
     </div>
   );

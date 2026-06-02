@@ -49,7 +49,7 @@ export function AIPlanGenerator({ date, onPlanCreated }: Props) {
       if (data.error) throw new Error(data.error);
       setPreview(data);
     } catch (e) {
-      toast('Failed to generate plan', 'error');
+      toast('Error al generar el plan', 'error');
       console.error(e);
     } finally {
       setLoading(false);
@@ -88,9 +88,9 @@ export function AIPlanGenerator({ date, onPlanCreated }: Props) {
       setShowModal(false);
       setPreview(null);
       setIntent('');
-      toast('Plan created!', 'success');
+      toast('¡Plan creado!', 'success');
     } catch {
-      toast('Failed to apply plan', 'error');
+      toast('Error al aplicar el plan', 'error');
     } finally {
       setApplying(false);
     }
@@ -103,14 +103,14 @@ export function AIPlanGenerator({ date, onPlanCreated }: Props) {
   return (
     <>
       <Button size="sm" variant="outline" onClick={() => setShowModal(true)}>
-        ✨ AI Plan
+        ✨ Plan IA
       </Button>
 
       {showModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl p-5 flex flex-col gap-4 max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between">
-              <h2 className="font-bold text-slate-900">Generate Plan for {format(parseISO(date), 'MMM d')}</h2>
+              <h2 className="font-bold text-slate-900">Generar Plan para {format(parseISO(date), 'MMM d')}</h2>
               <button onClick={() => { setShowModal(false); setPreview(null); }} className="text-slate-400 hover:text-slate-600">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
                   <path d="M18 6 6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
@@ -121,14 +121,14 @@ export function AIPlanGenerator({ date, onPlanCreated }: Props) {
             {!preview ? (
               <>
                 <Textarea
-                  label="What kind of workout?"
-                  placeholder="e.g. Upper body push, focus on chest and shoulders, ~45 minutes..."
+                  label="¿Qué tipo de entreno?"
+                  placeholder="ej. Empuje de tren superior, foco en pecho y hombros, ~45 minutos..."
                   rows={3}
                   value={intent}
                   onChange={e => setIntent(e.target.value)}
                 />
                 <Button onClick={generate} loading={loading} disabled={!intent.trim()}>
-                  Generate with AI
+                  Generar con IA
                 </Button>
               </>
             ) : (
@@ -154,8 +154,8 @@ export function AIPlanGenerator({ date, onPlanCreated }: Props) {
                 </div>
 
                 <div className="flex gap-2 pt-1">
-                  <Button onClick={applyPlan} loading={applying}>Apply Plan</Button>
-                  <Button variant="ghost" onClick={() => setPreview(null)}>Regenerate</Button>
+                  <Button onClick={applyPlan} loading={applying}>Aplicar Plan</Button>
+                  <Button variant="ghost" onClick={() => setPreview(null)}>Regenerar</Button>
                 </div>
               </>
             )}

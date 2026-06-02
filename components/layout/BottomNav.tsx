@@ -8,7 +8,7 @@ const today = format(new Date(), 'yyyy-MM-dd');
 const navItems = [
   {
     href: '/',
-    label: 'Home',
+    label: 'Inicio',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-6 h-6">
         <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" strokeLinecap="round" strokeLinejoin="round" />
@@ -18,7 +18,7 @@ const navItems = [
   },
   {
     href: `/workout/${today}`,
-    label: 'Today',
+    label: 'Hoy',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-6 h-6">
         <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" strokeLinecap="round" strokeLinejoin="round" />
@@ -31,7 +31,7 @@ const navItems = [
   },
   {
     href: '/planner',
-    label: 'Planner',
+    label: 'Planificador',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-6 h-6">
         <rect x="3" y="4" width="18" height="18" rx="2" ry="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -43,7 +43,7 @@ const navItems = [
   },
   {
     href: '/progress',
-    label: 'Progress',
+    label: 'Progreso',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-6 h-6">
         <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" strokeLinecap="round" strokeLinejoin="round" />
@@ -52,7 +52,7 @@ const navItems = [
   },
   {
     href: '/exercises',
-    label: 'Exercises',
+    label: 'Ejercicios',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-6 h-6">
         <path d="M6.5 6.5h11M6.5 12h11M6.5 17.5h11" strokeLinecap="round" strokeLinejoin="round" />
@@ -64,7 +64,7 @@ const navItems = [
   },
   {
     href: '/mesocycles',
-    label: 'Blocks',
+    label: 'Bloques',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-6 h-6">
         <rect x="3" y="3" width="7" height="7" rx="1" strokeLinecap="round" strokeLinejoin="round" />
@@ -76,7 +76,7 @@ const navItems = [
   },
   {
     href: '/ai',
-    label: 'AI Coach',
+    label: 'Entrenador IA',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-6 h-6">
         <path d="M12 2a5 5 0 1 1-4.546 7.128L3 12l4.454 2.872A5 5 0 1 1 12 22a5 5 0 0 1-4.546-2.872L3 22l4.454-7.128A5 5 0 0 1 12 2z" strokeLinecap="round" strokeLinejoin="round" />
@@ -85,7 +85,7 @@ const navItems = [
   },
   {
     href: '/profile',
-    label: 'Profile',
+    label: 'Perfil',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-6 h-6">
         <circle cx="12" cy="8" r="4" strokeLinecap="round" strokeLinejoin="round" />

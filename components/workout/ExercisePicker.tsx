@@ -20,10 +20,10 @@ export function ExercisePicker({ exercises, onSelect, onClose }: Props) {
   );
 
   return (
-    <Modal open onClose={onClose} title="Choose Exercise">
+    <Modal open onClose={onClose} title="Elegir Ejercicio">
       <div className="flex flex-col gap-3">
         <Input
-          placeholder="Search exercises..."
+          placeholder="Buscar ejercicios..."
           value={query}
           onChange={e => setQuery(e.target.value)}
           autoFocus
@@ -42,7 +42,7 @@ export function ExercisePicker({ exercises, onSelect, onClose }: Props) {
             </button>
           ))}
           {filtered.length === 0 && (
-            <p className="text-center text-slate-400 py-6 text-sm">No exercises found</p>
+            <p className="text-center text-slate-400 py-6 text-sm">No se encontraron ejercicios</p>
           )}
         </div>
       </div>

@@ -26,7 +26,7 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-baseline justify-between">
-        <h1 className="text-2xl font-bold text-slate-900">My Workouts</h1>
+        <h1 className="text-2xl font-bold text-slate-900">Mis Entrenos</h1>
         <span className="text-sm text-slate-400">{format(now, 'MMMM yyyy')}</span>
       </div>
 

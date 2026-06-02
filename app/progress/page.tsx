@@ -20,14 +20,14 @@ export default function ProgressPage() {
   const { data: sessions = [] } = useSWR<WorkoutSession[]>('/api/workout-sessions', fetcher);
 
   const tabs: { id: Tab; label: string }[] = [
-    { id: 'strength', label: 'Strength' },
-    { id: 'volume', label: 'Volume' },
-    { id: 'weight', label: 'Body Weight' },
+    { id: 'strength', label: 'Fuerza' },
+    { id: 'volume', label: 'Volumen' },
+    { id: 'weight', label: 'Peso Corporal' },
   ];
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-bold text-slate-900">Progress</h1>
+      <h1 className="text-2xl font-bold text-slate-900">Progreso</h1>
 
       {/* Tab bar */}
       <div className="flex gap-1 bg-slate-100 rounded-xl p-1">
@@ -47,13 +47,13 @@ export default function ProgressPage() {
       {tab === 'strength' && (
         <div className="flex flex-col gap-4">
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
-            <label className="block text-xs font-medium text-slate-500 mb-2">Select Exercise</label>
+            <label className="block text-xs font-medium text-slate-500 mb-2">Seleccionar Ejercicio</label>
             <select
               value={selectedExerciseId ?? ''}
               onChange={e => setSelectedExerciseId(e.target.value || null)}
               className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-400"
             >
-              <option value="">Choose an exercise...</option>
+              <option value="">Elegí un ejercicio...</option>
               {exercises.map(ex => (
                 <option key={ex.id} value={ex.id}>{ex.name}</option>
               ))}
@@ -65,15 +65,15 @@ export default function ProgressPage() {
               <h3 className="font-semibold text-slate-800 mb-1">
                 {exercises.find(e => e.id === selectedExerciseId)?.name}
               </h3>
-              <p className="text-xs text-slate-400 mb-3">Weight over time · Orange dots = PR</p>
+              <p className="text-xs text-slate-400 mb-3">Peso en el tiempo · Puntos naranjas = RP</p>
               {loadingProgress ? (
-                <div className="h-40 flex items-center justify-center text-slate-400 text-sm">Loading...</div>
+                <div className="h-40 flex items-center justify-center text-slate-400 text-sm">Cargando...</div>
               ) : (
                 <ExerciseProgressChart data={points} />
               )}
               {points.filter(p => p.isPR).length > 0 && (
                 <div className="mt-3 pt-3 border-t border-slate-100">
-                  <p className="text-xs text-slate-500 font-medium mb-1">Personal Records</p>
+                  <p className="text-xs text-slate-500 font-medium mb-1">Récords Personales</p>
                   <div className="flex flex-col gap-1">
                     {points.filter(p => p.isPR).slice(-3).reverse().map((p, i) => (
                       <div key={i} className="flex items-center justify-between text-xs">
@@ -91,8 +91,8 @@ export default function ProgressPage() {
 
       {tab === 'volume' && (
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
-          <h3 className="font-semibold text-slate-800 mb-1">Weekly Volume</h3>
-          <p className="text-xs text-slate-400 mb-3">Total tonnage (kg × sets × reps) per muscle group</p>
+          <h3 className="font-semibold text-slate-800 mb-1">Volumen Semanal</h3>
+          <p className="text-xs text-slate-400 mb-3">Tonelaje total (kg × series × reps) por grupo muscular</p>
           <VolumeChart sessions={sessions.filter(s => s.exercises)} />
         </div>
       )}

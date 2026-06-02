@@ -71,14 +71,14 @@ export function ActiveBlockView({
           )}
           {isCircuit && !blockDone && (
             <p className="text-sm text-slate-500 mt-0.5">
-              Round {currentRound} of {maxSets}
-              <span className="ml-2 text-slate-400">· do each exercise, then repeat</span>
+              Ronda {currentRound} de {maxSets}
+              <span className="ml-2 text-slate-400">· hacé cada ejercicio, luego repetí</span>
             </p>
           )}
         </div>
         {blockDone && (
           <span className="text-xs font-semibold text-green-600 bg-green-50 border border-green-200 px-3 py-1 rounded-full">
-            Block done ✓
+            Bloque listo ✓
           </span>
         )}
       </div>
@@ -120,13 +120,13 @@ export function ActiveBlockView({
           onClick={onNext}
           className="w-full h-12 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl text-sm font-semibold transition-colors mt-1"
         >
-          Next block →
+          Siguiente bloque →
         </button>
       )}
       {blockDone && isLastBlock && (
         <div className="w-full py-4 text-center rounded-2xl bg-green-50 border border-green-200">
-          <p className="text-green-700 font-semibold">Workout complete! 💪</p>
-          <p className="text-xs text-green-500 mt-0.5">Finish the session in the header</p>
+          <p className="text-green-700 font-semibold">¡Entreno completo! 💪</p>
+          <p className="text-xs text-green-500 mt-0.5">Finalizá la sesión desde el encabezado</p>
         </div>
       )}
     </div>

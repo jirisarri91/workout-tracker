@@ -218,7 +218,7 @@ export default function WorkoutPage({ params }: { params: Promise<{ date: string
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-slate-900">{displayDate}</h1>
         <Link href="/planner">
-          <Button size="sm" variant="outline">Edit plan</Button>
+          <Button size="sm" variant="outline">Editar plan</Button>
         </Link>
       </div>
 
@@ -232,9 +232,9 @@ export default function WorkoutPage({ params }: { params: Promise<{ date: string
 
       {planExercises.length === 0 ? (
         <div className="bg-white rounded-2xl border border-dashed border-slate-200 p-8 text-center">
-          <p className="text-slate-400 mb-3">No workout planned for this day</p>
+          <p className="text-slate-400 mb-3">Sin entreno planificado para este día</p>
           <Link href="/planner">
-            <Button variant="outline">Plan a workout</Button>
+            <Button variant="outline">Planificar un entreno</Button>
           </Link>
         </div>
       ) : (
@@ -271,7 +271,7 @@ export default function WorkoutPage({ params }: { params: Promise<{ date: string
             onClick={() => setShowFullPlan(v => !v)}
             className="flex items-center justify-center gap-1.5 text-sm text-slate-400 hover:text-slate-600 py-1 transition-colors"
           >
-            <span>{showFullPlan ? '↑ Hide' : '↓ Review full plan'}</span>
+            <span>{showFullPlan ? '↑ Ocultar' : '↓ Ver plan completo'}</span>
           </button>
 
           {showFullPlan && (
@@ -284,12 +284,12 @@ export default function WorkoutPage({ params }: { params: Promise<{ date: string
                       className="flex items-center gap-2 mb-2 w-full group text-left"
                     >
                       <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider group-hover:text-orange-500 transition-colors">
-                        {block.name || `Block ${bi + 1}`}
+                        {block.name || `Bloque ${bi + 1}`}
                       </span>
                       {bi === activeBlockIndex && (
-                        <span className="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full font-medium">current</span>
+                        <span className="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full font-medium">actual</span>
                       )}
-                      <span className="text-xs text-slate-300 group-hover:text-orange-400 transition-colors ml-auto">focus →</span>
+                      <span className="text-xs text-slate-300 group-hover:text-orange-400 transition-colors ml-auto">ir →</span>
                     </button>
                   )}
                   {block.exercises.map(planEx => (

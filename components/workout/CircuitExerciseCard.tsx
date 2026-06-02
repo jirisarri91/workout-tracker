@@ -89,7 +89,7 @@ export function CircuitExerciseCard({
     try {
       await upsertSessionExercise({ status: 'not_done' });
     } catch {
-      toast('Failed to save', 'error');
+      toast('Error al guardar', 'error');
     }
   }
 
@@ -97,7 +97,7 @@ export function CircuitExerciseCard({
     try {
       await upsertSessionExercise({ status: 'done' });
     } catch {
-      toast('Failed to save', 'error');
+      toast('Error al guardar', 'error');
     }
   }
 
@@ -105,7 +105,7 @@ export function CircuitExerciseCard({
     try {
       await upsertSessionExercise({ status: 'replaced', replaced_exercise_id: ex.id });
     } catch {
-      toast('Failed to save', 'error');
+      toast('Error al guardar', 'error');
     }
     setShowPicker(false);
   }
@@ -116,7 +116,7 @@ export function CircuitExerciseCard({
       try {
         await upsertSessionExercise({ actual_weight: val ? parseFloat(val) : null });
       } catch {
-        toast('Failed to save', 'error');
+        toast('Error al guardar', 'error');
       }
     }, 700);
   }
@@ -127,7 +127,7 @@ export function CircuitExerciseCard({
       try {
         await upsertSessionExercise({ observations: val });
       } catch {
-        toast('Failed to save', 'error');
+        toast('Error al guardar', 'error');
       }
     }, 700);
   }
@@ -164,12 +164,12 @@ export function CircuitExerciseCard({
               <span className="font-medium">{fmtDuration(planExercise.duration_seconds)}</span>
             )}
             {planExercise.target_weight && (
-              <span>· {planExercise.target_weight}kg target</span>
+              <span>· objetivo {planExercise.target_weight}kg</span>
             )}
             {suggestion?.suggestedWeight ? (
-              <span className="text-orange-500 font-medium">→ try {suggestion.suggestedWeight}kg</span>
+              <span className="text-orange-500 font-medium">→ probar {suggestion.suggestedWeight}kg</span>
             ) : suggestion?.lastWeight ? (
-              <span>· last {suggestion.lastWeight}kg</span>
+              <span>· última {suggestion.lastWeight}kg</span>
             ) : null}
           </div>
         </div>
@@ -185,7 +185,7 @@ export function CircuitExerciseCard({
             onClick={handleUnskip}
             className="shrink-0 text-xs text-slate-400 hover:text-slate-600 px-2 py-1 rounded-lg border border-slate-200 hover:border-slate-300"
           >
-            undo skip
+            deshacer
           </button>
         )}
       </div>
@@ -216,13 +216,13 @@ export function CircuitExerciseCard({
               onClick={onSetComplete}
               className="flex-1 h-11 bg-orange-500 hover:bg-orange-600 active:scale-95 text-white rounded-xl text-sm font-semibold transition-all shadow-sm"
             >
-              Set {setsDone + 1} done ✓
+              Serie {setsDone + 1} listo ✓
             </button>
 
             {/* Skip */}
             <button
               onClick={handleSkip}
-              title="Skip exercise"
+              title="Omitir ejercicio"
               className="w-9 h-11 flex items-center justify-center text-slate-300 hover:text-red-400 hover:bg-red-50 rounded-xl transition-colors text-lg"
             >
               ✕
@@ -231,7 +231,7 @@ export function CircuitExerciseCard({
             {/* Replace */}
             <button
               onClick={() => setShowPicker(true)}
-              title="Replace exercise"
+              title="Reemplazar ejercicio"
               className="w-9 h-11 flex items-center justify-center text-slate-300 hover:text-yellow-500 hover:bg-yellow-50 rounded-xl transition-colors text-base"
             >
               ↔
@@ -242,7 +242,7 @@ export function CircuitExerciseCard({
           <div className="flex gap-2">
             <div className="w-28 shrink-0">
               <Input
-                label="Actual kg"
+                label="Kg real"
                 type="number"
                 step="0.5"
                 placeholder={planExercise.target_weight?.toString() ?? '0'}
@@ -256,8 +256,8 @@ export function CircuitExerciseCard({
             </div>
             <div className="flex-1">
               <Textarea
-                label="Sensations"
-                placeholder="How did it feel?"
+                label="Sensaciones"
+                placeholder="¿Cómo se sintió?"
                 value={localObs}
                 rows={2}
                 className="text-sm"
@@ -269,7 +269,7 @@ export function CircuitExerciseCard({
             </div>
           </div>
           {planExercise.rest_seconds && (
-            <p className="text-xs text-slate-400">Rest: {planExercise.rest_seconds}s after</p>
+            <p className="text-xs text-slate-400">Descanso: {planExercise.rest_seconds}s después</p>
           )}
         </div>
       )}
@@ -299,7 +299,7 @@ export function CircuitExerciseCard({
           <div className="flex gap-2">
             <div className="w-28 shrink-0">
               <Input
-                label="Actual kg"
+                label="Kg real"
                 type="number"
                 step="0.5"
                 placeholder={planExercise.target_weight?.toString() ?? '0'}
@@ -313,8 +313,8 @@ export function CircuitExerciseCard({
             </div>
             <div className="flex-1">
               <Textarea
-                label="Sensations"
-                placeholder="How did it feel?"
+                label="Sensaciones"
+                placeholder="¿Cómo se sintió?"
                 value={localObs}
                 rows={2}
                 className="text-sm"
@@ -329,7 +329,7 @@ export function CircuitExerciseCard({
             onClick={() => setShowEdit(false)}
             className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
           >
-            ← done editing
+            ← listo
           </button>
         </div>
       )}
