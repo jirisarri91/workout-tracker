@@ -19,6 +19,8 @@ export function WorkoutHeader({ date, session, planObjective, planName, onSessio
   const [running, setRunning] = useState(false);
   const [notes, setNotes] = useState(session?.notes ?? '');
   const [saving, setSaving] = useState(false);
+  const [confirmDeleteSession, setConfirmDeleteSession] = useState(false);
+  const [deletingSession, setDeletingSession] = useState(false);
   const { toast } = useToast();
   const notesTimeout = { current: null as ReturnType<typeof setTimeout> | null };
 
@@ -79,6 +81,19 @@ export function WorkoutHeader({ date, session, planObjective, planName, onSessio
       toast('¡Entreno completo! 💪');
     } catch { toast('Error al finalizar', 'error'); }
     finally { setSaving(false); }
+  }
+
+  async function deleteSession() {
+    if (!session) return;
+    setDeletingSession(true);
+    try {
+      await fetch(`/api/workout-sessions/${session.id}`, { method: 'DELETE' });
+      setConfirmDeleteSession(false);
+      setRunning(false);
+      onSessionUpdated();
+      toast('Sesión eliminada');
+    } catch { toast('Error al eliminar', 'error'); }
+    finally { setDeletingSession(false); }
   }
 
   async function saveNotes(val: string) {
@@ -146,6 +161,35 @@ export function WorkoutHeader({ date, session, planObjective, planName, onSessio
           }}
         />
       </div>
+
+      {session && (
+        <div className="mt-2 flex justify-end">
+          {confirmDeleteSession ? (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={deleteSession}
+                disabled={deletingSession}
+                className="text-xs font-medium text-red-600 hover:text-red-700 disabled:opacity-40"
+              >
+                {deletingSession ? 'Eliminando…' : 'Confirmar eliminación'}
+              </button>
+              <button
+                onClick={() => setConfirmDeleteSession(false)}
+                className="text-xs text-slate-400 hover:text-slate-600"
+              >
+                Cancelar
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setConfirmDeleteSession(true)}
+              className="text-xs text-slate-300 hover:text-red-400 transition-colors"
+            >
+              Eliminar sesión
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

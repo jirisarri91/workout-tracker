@@ -287,6 +287,8 @@ export function PlanEditor({ date, plan, allExercises, allPlans, onSaved }: Prop
   const [showAddBlock, setShowAddBlock] = useState(false);
   const [newBlockName, setNewBlockName] = useState('');
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
   const { toast } = useToast();
 
@@ -401,6 +403,21 @@ export function PlanEditor({ date, plan, allExercises, allPlans, onSaved }: Prop
       const newIdx = prev.findIndex(e => e.id === overIdStr);
       return arrayMove(prev, oldIdx, newIdx);
     });
+  }
+
+  async function deletePlan() {
+    if (!plan) return;
+    setDeleting(true);
+    try {
+      await fetch(`/api/workout-plans/${plan.id}`, { method: 'DELETE' });
+      toast('Plan eliminado');
+      setConfirmDelete(false);
+      onSaved();
+    } catch {
+      toast('Error al eliminar el plan', 'error');
+    } finally {
+      setDeleting(false);
+    }
   }
 
   async function save() {
@@ -633,6 +650,31 @@ export function PlanEditor({ date, plan, allExercises, allPlans, onSaved }: Prop
         <Button onClick={save} loading={saving} size="lg" className="w-full">
           Guardar Plan
         </Button>
+
+        {plan && (
+          confirmDelete ? (
+            <div className="flex items-center gap-2 justify-center">
+              <Button
+                size="sm"
+                variant="danger"
+                loading={deleting}
+                onClick={deletePlan}
+              >
+                Confirmar eliminación
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setConfirmDelete(false)}>
+                Cancelar
+              </Button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setConfirmDelete(true)}
+              className="text-sm text-slate-400 hover:text-red-500 transition-colors text-center w-full py-1"
+            >
+              Eliminar este plan
+            </button>
+          )
+        )}
 
         {/* Drag overlay — shows floating card while dragging an exercise */}
         <DragOverlay>
