@@ -436,11 +436,14 @@ ${serializedSessions.map(s => `
     async start(controller) {
       const emit = (text: string) => controller.enqueue(encoder.encode(text));
 
+      const completedMutations: string[] = [];
+      let loopCount = 0;
+
       try {
         const messages: Anthropic.MessageParam[] = [...claudeMessages];
 
-        while (true) {
-          const response = await anthropic.messages.create({
+        while (loopCount++ < 15) {
+          const claudeStream = anthropic.messages.stream({
             model: 'claude-sonnet-4-6',
             max_tokens: 4096,
             system: systemPrompt,
@@ -448,11 +451,9 @@ ${serializedSessions.map(s => `
             messages,
           });
 
-          for (const block of response.content) {
-            if (block.type === 'text' && block.text) {
-              emit(block.text);
-            }
-          }
+          claudeStream.on('text', (text) => emit(text));
+
+          const response = await claudeStream.finalMessage();
 
           if (response.stop_reason !== 'tool_use') break;
 
@@ -465,23 +466,41 @@ ${serializedSessions.map(s => `
           const toolResults: Anthropic.ToolResultBlockParam[] = [];
           for (const toolUse of toolUseBlocks) {
             const inp = toolUse.input as ToolInput;
-            const skipLabel = toolUse.name === 'list_exercises' || toolUse.name === 'list_templates' || toolUse.name === 'list_workout_plans';
-            if (!skipLabel) {
+
+            if (toolUse.name === 'list_exercises') {
+              emit('\n_Consultando ejercicios disponibles..._\n\n');
+            } else if (toolUse.name === 'list_templates') {
+              emit('\n_Consultando templates existentes..._\n\n');
+            } else if (toolUse.name === 'list_workout_plans') {
+              emit('\n_Consultando planes de entrenamiento..._\n\n');
+            } else {
               const label =
                 toolUse.name === 'create_template'
                   ? `Creando template: **${inp.name}**`
                   : toolUse.name === 'update_template'
-                  ? `Actualizando template **${inp.id}**`
+                  ? `Actualizando template...`
                   : toolUse.name === 'create_workout_plan'
                   ? `Creando plan de entrenamiento para **${inp.date}**`
                   : toolUse.name === 'update_workout_plan'
-                  ? `Actualizando plan de entrenamiento **${inp.id}**`
+                  ? `Actualizando plan de entrenamiento...`
                   : `Creando mesociclo: **${inp.name}**`;
-              emit(`\n_${label}..._\n\n`);
+              emit(`\n_${label}_\n\n`);
             }
 
             try {
               const result = await executeTool(toolUse.name, toolUse.input as ToolInput);
+              const r = result as Record<string, unknown>;
+              if (toolUse.name === 'create_template') {
+                completedMutations.push(`✓ Template creado: **${r.name}**`);
+              } else if (toolUse.name === 'update_template') {
+                completedMutations.push(`✓ Template actualizado: **${r.name}**`);
+              } else if (toolUse.name === 'create_workout_plan') {
+                completedMutations.push(`✓ Plan creado para **${r.date}**`);
+              } else if (toolUse.name === 'update_workout_plan') {
+                completedMutations.push(`✓ Plan actualizado para **${r.date}**`);
+              } else if (toolUse.name === 'create_mesocycle') {
+                completedMutations.push(`✓ Mesociclo creado: **${r.name}**`);
+              }
               toolResults.push({
                 type: 'tool_result',
                 tool_use_id: toolUse.id,
@@ -498,6 +517,10 @@ ${serializedSessions.map(s => `
           }
 
           messages.push({ role: 'user', content: toolResults });
+        }
+
+        if (completedMutations.length > 0) {
+          emit(`\n\n---\n**Cambios guardados:**\n${completedMutations.join('\n')}`);
         }
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'AI error';
