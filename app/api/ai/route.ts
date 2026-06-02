@@ -191,6 +191,7 @@ async function executeTool(name: string, input: ToolInput): Promise<unknown> {
 export async function POST(req: NextRequest) {
   const body = await req.json();
   const customPrompt: string | undefined = body.prompt;
+  const history: Array<{ role: 'user' | 'assistant'; content: string }> = body.messages ?? [];
 
   const [objective, sessions, latestWeight] = await Promise.all([
     prisma.userObjective.findFirst(),
@@ -232,27 +233,31 @@ When the user asks you to create something (a template, workout, or mesocycle), 
 
 IMPORTANT: You must never create or modify anything for a past date. Workout plans may only be created for today or future dates. Never attempt to alter, overwrite, or delete existing workout history — that data is read-only and must be preserved.
 
-When not creating something, provide specific, actionable recommendations. Be encouraging and practical. Format responses with clear sections using markdown.`;
+When not creating something, provide specific, actionable recommendations. Be encouraging and practical. Format responses with clear sections using markdown.
 
-  const userMessage = `
-${objective ? `**My fitness goal:** ${objective.objective_text ?? 'Not set'}
-**My training strategy:** ${objective.strategy_text ?? 'Not set'}` : 'No fitness goals set yet.'}
-${age ? `**Age:** ${age} years old` : ''}
-${objective?.height_cm ? `**Height:** ${objective.height_cm}cm` : ''}
-${latestWeight ? `**Current weight:** ${Number(latestWeight.weight_kg)}kg (logged ${serialize(latestWeight.date)})` : ''}
-${objective?.equipment ? `**Available equipment:** ${objective.equipment}` : ''}
-${objective?.personal_context ? `**Personal context:** ${objective.personal_context}` : ''}
+--- USER PROFILE ---
+${objective ? `Goal: ${objective.objective_text ?? 'Not set'}
+Strategy: ${objective.strategy_text ?? 'Not set'}` : 'No fitness goals set yet.'}
+${age ? `Age: ${age} years old` : ''}
+${objective?.height_cm ? `Height: ${objective.height_cm}cm` : ''}
+${latestWeight ? `Current weight: ${Number(latestWeight.weight_kg)}kg (logged ${serialize(latestWeight.date)})` : ''}
+${objective?.equipment ? `Available equipment: ${objective.equipment}` : ''}
+${objective?.personal_context ? `Personal context: ${objective.personal_context}` : ''}
 
-**Recent workout sessions (last ${serializedSessions.length}):**
+--- RECENT WORKOUT SESSIONS (last ${serializedSessions.length}) ---
 ${serializedSessions.map(s => `
 - ${s.date}: ${s.status.toUpperCase()}${s.actual_start_time && s.actual_end_time ? ` (${Math.round((new Date(s.actual_end_time).getTime() - new Date(s.actual_start_time).getTime()) / 60000)} min)` : ''}
   Exercises: ${s.exercises?.map(e =>
     `${e.exercise?.name ?? 'Unknown'} ${e.actual_weight ? `@ ${e.actual_weight}kg` : ''} ${e.sets && e.reps ? `${e.sets}×${e.reps}` : ''} [${e.status}]`
   ).join(', ') ?? 'None'}
-`).join('')}
+`).join('')}`;
 
-${customPrompt ? `**My request:** ${customPrompt}` : '**Please provide:** progressive overload suggestions, recovery assessment, and any adjustments to my weekly training plan.'}
-  `.trim();
+  const newUserMessage = customPrompt?.trim() || 'Por favor proporcioná sugerencias de sobrecarga progresiva, evaluación de recuperación y ajustes a mi plan de entrenamiento semanal.';
+
+  const claudeMessages: Anthropic.MessageParam[] = [
+    ...history.map(m => ({ role: m.role, content: m.content })),
+    { role: 'user', content: newUserMessage },
+  ];
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
@@ -260,7 +265,7 @@ ${customPrompt ? `**My request:** ${customPrompt}` : '**Please provide:** progre
       const emit = (text: string) => controller.enqueue(encoder.encode(text));
 
       try {
-        const messages: Anthropic.MessageParam[] = [{ role: 'user', content: userMessage }];
+        const messages: Anthropic.MessageParam[] = [...claudeMessages];
 
         while (true) {
           const response = await anthropic.messages.create({
