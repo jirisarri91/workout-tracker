@@ -6,11 +6,35 @@ import { serialize } from '@/lib/serialize';
 
 type ToolInput = Record<string, unknown>;
 
+const exerciseItemSchema = {
+  type: 'object',
+  properties: {
+    exercise_id: { type: 'string', description: 'ID from list_exercises' },
+    block_name: { type: 'string', description: 'e.g. "Calentamiento", "Principal", "Finalizador"' },
+    sets: { type: 'number' },
+    reps: { type: 'number' },
+    target_weight: { type: 'number', description: 'kg' },
+    rest_seconds: { type: 'number' },
+    notes: { type: 'string' },
+  },
+  required: ['exercise_id'],
+} as const;
+
 const tools: Anthropic.Tool[] = [
   {
     name: 'list_exercises',
     description:
-      'List all available exercises with their IDs, names, and muscle groups. Always call this before creating templates or workout plans to get valid exercise IDs.',
+      'List all available exercises with their IDs, names, and muscle groups. Always call this before creating or updating templates or workout plans to get valid exercise IDs.',
+    input_schema: { type: 'object', properties: {}, required: [] },
+  },
+  {
+    name: 'list_templates',
+    description: 'List all existing workout templates with their exercises. Call this before updating a template to get valid template IDs.',
+    input_schema: { type: 'object', properties: {}, required: [] },
+  },
+  {
+    name: 'list_workout_plans',
+    description: 'List upcoming workout plans (today and future) with their exercises. Call this before updating a plan to get valid plan IDs.',
     input_schema: { type: 'object', properties: {}, required: [] },
   },
   {
@@ -25,22 +49,29 @@ const tools: Anthropic.Tool[] = [
         exercises: {
           type: 'array',
           description: 'Exercises to include',
-          items: {
-            type: 'object',
-            properties: {
-              exercise_id: { type: 'string', description: 'ID from list_exercises' },
-              block_name: { type: 'string', description: 'e.g. "Warm-up", "Main", "Finisher"' },
-              sets: { type: 'number' },
-              reps: { type: 'number' },
-              target_weight: { type: 'number', description: 'kg' },
-              rest_seconds: { type: 'number' },
-              notes: { type: 'string' },
-            },
-            required: ['exercise_id'],
-          },
+          items: exerciseItemSchema,
         },
       },
       required: ['name', 'exercises'],
+    },
+  },
+  {
+    name: 'update_template',
+    description: 'Update an existing workout template. Call list_templates first to get the template ID. If exercises are provided, they replace the current exercise list entirely.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', description: 'Template ID from list_templates' },
+        name: { type: 'string', description: 'New template name (optional)' },
+        objective: { type: 'string', description: 'New objective (optional)' },
+        notes: { type: 'string', description: 'New notes (optional)' },
+        exercises: {
+          type: 'array',
+          description: 'New exercise list — replaces all existing exercises if provided',
+          items: exerciseItemSchema,
+        },
+      },
+      required: ['id'],
     },
   },
   {
@@ -55,22 +86,29 @@ const tools: Anthropic.Tool[] = [
         notes: { type: 'string' },
         exercises: {
           type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              exercise_id: { type: 'string', description: 'ID from list_exercises' },
-              block_name: { type: 'string' },
-              sets: { type: 'number' },
-              reps: { type: 'number' },
-              target_weight: { type: 'number', description: 'kg' },
-              rest_seconds: { type: 'number' },
-              notes: { type: 'string' },
-            },
-            required: ['exercise_id'],
-          },
+          items: exerciseItemSchema,
         },
       },
       required: ['date', 'exercises'],
+    },
+  },
+  {
+    name: 'update_workout_plan',
+    description: 'Update an existing workout plan for today or a future date. Cannot modify plans that have already been completed (done). Call list_workout_plans first to get valid plan IDs. If exercises are provided, they replace the current exercise list entirely.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', description: 'Plan ID from list_workout_plans' },
+        name: { type: 'string', description: 'New plan name (optional)' },
+        objective: { type: 'string', description: 'New objective (optional)' },
+        notes: { type: 'string', description: 'New notes (optional)' },
+        exercises: {
+          type: 'array',
+          description: 'New exercise list — replaces all existing exercises if provided',
+          items: exerciseItemSchema,
+        },
+      },
+      required: ['id'],
     },
   },
   {
@@ -90,12 +128,137 @@ const tools: Anthropic.Tool[] = [
   },
 ];
 
+function todayString() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+}
+
 async function executeTool(name: string, input: ToolInput): Promise<unknown> {
   if (name === 'list_exercises') {
     return prisma.exercise.findMany({
       select: { id: true, name: true, muscle_groups: true },
       orderBy: { name: 'asc' },
     });
+  }
+
+  if (name === 'list_templates') {
+    return prisma.workoutTemplate.findMany({
+      include: {
+        exercises: {
+          include: { exercise: { select: { name: true } } },
+          orderBy: { order_index: 'asc' },
+        },
+      },
+      orderBy: { name: 'asc' },
+    });
+  }
+
+  if (name === 'list_workout_plans') {
+    const todayDate = new Date(`${todayString()}T00:00:00`);
+    return prisma.workoutPlan.findMany({
+      where: { date: { gte: todayDate } },
+      include: {
+        exercises: {
+          include: { exercise: { select: { name: true } } },
+          orderBy: { order_index: 'asc' },
+        },
+      },
+      orderBy: { date: 'asc' },
+    });
+  }
+
+  if (name === 'update_template') {
+    const { id, exercises, name: tplName, objective, notes } = input as {
+      id: string;
+      exercises?: ToolInput[];
+      name?: string;
+      objective?: string;
+      notes?: string;
+    };
+    const template = await prisma.workoutTemplate.findUnique({ where: { id } });
+    if (!template) throw new Error(`Template not found: ${id}`);
+
+    await prisma.workoutTemplate.update({
+      where: { id },
+      data: {
+        ...(tplName !== undefined && { name: tplName }),
+        ...(objective !== undefined && { objective }),
+        ...(notes !== undefined && { notes }),
+      },
+    });
+
+    if (exercises !== undefined) {
+      await prisma.workoutTemplateExercise.deleteMany({ where: { template_id: id } });
+      if (exercises.length > 0) {
+        await prisma.workoutTemplateExercise.createMany({
+          data: exercises.map((e, i) => ({
+            template_id: id,
+            exercise_id: e.exercise_id as string,
+            block_name: (e.block_name as string) ?? null,
+            order_index: i,
+            sets: (e.sets as number) ?? null,
+            reps: (e.reps as number) ?? null,
+            target_weight: (e.target_weight as number) ?? null,
+            rest_seconds: (e.rest_seconds as number) ?? null,
+            notes: (e.notes as string) ?? null,
+          })),
+        });
+      }
+    }
+    return { success: true, id, name: tplName ?? template.name };
+  }
+
+  if (name === 'update_workout_plan') {
+    const { id, exercises, name: planName, objective, notes } = input as {
+      id: string;
+      exercises?: ToolInput[];
+      name?: string;
+      objective?: string;
+      notes?: string;
+    };
+    const plan = await prisma.workoutPlan.findUnique({
+      where: { id },
+      include: { sessions: { select: { status: true } } },
+    });
+    if (!plan) throw new Error(`Workout plan not found: ${id}`);
+
+    const planDateStr = plan.date.toISOString().slice(0, 10);
+    if (planDateStr < todayString()) {
+      throw new Error(`Cannot modify a workout plan from the past (${planDateStr}). Only today or future plans can be edited.`);
+    }
+    const isCompleted = plan.sessions.some(s => s.status === 'done');
+    if (isCompleted) {
+      throw new Error(`The workout plan for ${planDateStr} has already been completed and cannot be modified by AI. Only manual edits are allowed for completed workouts.`);
+    }
+
+    await prisma.workoutPlan.update({
+      where: { id },
+      data: {
+        ...(planName !== undefined && { name: planName }),
+        ...(objective !== undefined && { objective }),
+        ...(notes !== undefined && { notes }),
+      },
+    });
+
+    if (exercises !== undefined) {
+      await prisma.workoutPlanExercise.deleteMany({ where: { workout_plan_id: id } });
+      if (exercises.length > 0) {
+        await prisma.workoutPlanExercise.createMany({
+          data: exercises.map((e, i) => ({
+            workout_plan_id: id,
+            exercise_id: e.exercise_id as string,
+            block_name: (e.block_name as string) ?? null,
+            order_index: i,
+            sets: (e.sets as number) ?? null,
+            reps: (e.reps as number) ?? null,
+            target_weight: (e.target_weight as number) ?? null,
+            rest_seconds: (e.rest_seconds as number) ?? null,
+            notes: (e.notes as string) ?? null,
+          })),
+        });
+      }
+    }
+    return { success: true, id, date: planDateStr };
   }
 
   if (name === 'create_template') {
@@ -134,9 +297,7 @@ async function executeTool(name: string, input: ToolInput): Promise<unknown> {
       objective?: string;
       notes?: string;
     };
-    const now = new Date();
-    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-    if (date < todayStr) {
+    if (date < todayString()) {
       throw new Error(`Cannot create a workout plan for a past date (${date}). Only today or future dates are allowed.`);
     }
     const planDate = new Date(`${date}T12:00:00`);
@@ -233,11 +394,16 @@ export async function POST(req: NextRequest) {
   const todayLocal = new Date();
   const today = `${todayLocal.getFullYear()}-${String(todayLocal.getMonth() + 1).padStart(2, '0')}-${String(todayLocal.getDate()).padStart(2, '0')}`;
 
-  const systemPrompt = `You are a personal fitness coach AI. You can analyze the user's workout history and goals, provide recommendations, AND create workout templates, workout plans, and mesocycles on demand using your available tools.
+  const systemPrompt = `You are a personal fitness coach AI. You can analyze the user's workout history and goals, provide recommendations, AND create or update workout templates, workout plans, and mesocycles on demand using your available tools.
 
-When the user asks you to create something (a template, workout, or mesocycle), use the appropriate tool. Always call list_exercises first to get valid exercise IDs before creating templates or workout plans. Today's date is ${today}.
+When the user asks you to create or update something (a template, workout plan, or mesocycle), use the appropriate tool. Always call list_exercises first to get valid exercise IDs. To update an existing template, call list_templates first to get the ID. To update an existing workout plan, call list_workout_plans first. Today's date is ${today}.
 
-IMPORTANT: You must never create or modify anything for a past date. Workout plans may only be created for today or future dates. Never attempt to alter, overwrite, or delete existing workout history — that data is read-only and must be preserved.
+IMPORTANT RULES:
+- Never create or modify anything for a past date.
+- Workout plans may only be created or updated for today or future dates.
+- Never modify a workout plan that has already been completed (status = done) — completed workouts are read-only.
+- Never attempt to alter, overwrite, or delete existing workout history (WorkoutSession records) — that data is read-only and must be preserved.
+- Templates are always editable regardless of date.
 
 When not creating something, provide specific, actionable recommendations. Be encouraging and practical. Format responses with clear sections using markdown.
 
@@ -298,13 +464,19 @@ ${serializedSessions.map(s => `
 
           const toolResults: Anthropic.ToolResultBlockParam[] = [];
           for (const toolUse of toolUseBlocks) {
-            if (toolUse.name !== 'list_exercises') {
+            const inp = toolUse.input as ToolInput;
+            const skipLabel = toolUse.name === 'list_exercises' || toolUse.name === 'list_templates' || toolUse.name === 'list_workout_plans';
+            if (!skipLabel) {
               const label =
                 toolUse.name === 'create_template'
-                  ? `Creating template: **${(toolUse.input as ToolInput).name}**`
+                  ? `Creando template: **${inp.name}**`
+                  : toolUse.name === 'update_template'
+                  ? `Actualizando template **${inp.id}**`
                   : toolUse.name === 'create_workout_plan'
-                  ? `Creating workout plan for **${(toolUse.input as ToolInput).date}**`
-                  : `Creating mesocycle: **${(toolUse.input as ToolInput).name}**`;
+                  ? `Creando plan de entrenamiento para **${inp.date}**`
+                  : toolUse.name === 'update_workout_plan'
+                  ? `Actualizando plan de entrenamiento **${inp.id}**`
+                  : `Creando mesociclo: **${inp.name}**`;
               emit(`\n_${label}..._\n\n`);
             }
 
