@@ -134,14 +134,19 @@ async function executeTool(name: string, input: ToolInput): Promise<unknown> {
       objective?: string;
       notes?: string;
     };
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    if (new Date(date) < today) {
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    if (date < todayStr) {
       throw new Error(`Cannot create a workout plan for a past date (${date}). Only today or future dates are allowed.`);
+    }
+    const planDate = new Date(`${date}T12:00:00`);
+    const existing = await prisma.workoutPlan.findUnique({ where: { date: planDate } });
+    if (existing) {
+      throw new Error(`A workout plan already exists for ${date} (id: ${existing.id}). Ask the user if they want to update it or choose a different date.`);
     }
     const plan = await prisma.workoutPlan.create({
       data: {
-        date: new Date(date),
+        date: planDate,
         name: planName ?? null,
         objective: objective ?? null,
         notes: notes ?? null,
@@ -225,7 +230,8 @@ export async function POST(req: NextRequest) {
     }>;
   }>;
 
-  const today = new Date().toISOString().split('T')[0];
+  const todayLocal = new Date();
+  const today = `${todayLocal.getFullYear()}-${String(todayLocal.getMonth() + 1).padStart(2, '0')}-${String(todayLocal.getDate()).padStart(2, '0')}`;
 
   const systemPrompt = `You are a personal fitness coach AI. You can analyze the user's workout history and goals, provide recommendations, AND create workout templates, workout plans, and mesocycles on demand using your available tools.
 
