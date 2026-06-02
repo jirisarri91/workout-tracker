@@ -7,6 +7,8 @@ interface Message {
   content: string;
 }
 
+const STORAGE_KEY = 'ai_trainer_messages';
+
 export default function AICoachPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [prompt, setPrompt] = useState('');
@@ -14,6 +16,19 @@ export default function AICoachPage() {
   const [streamingContent, setStreamingContent] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) setMessages(JSON.parse(saved));
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    if (messages.length > 0) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+    }
+  }, [messages]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -74,6 +89,7 @@ export default function AICoachPage() {
     setMessages([]);
     setStreamingContent('');
     setPrompt('');
+    localStorage.removeItem(STORAGE_KEY);
   }
 
   const hasMessages = messages.length > 0 || !!streamingContent;
