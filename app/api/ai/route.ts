@@ -188,22 +188,24 @@ async function executeTool(name: string, input: ToolInput): Promise<unknown> {
     });
 
     if (exercises !== undefined) {
-      await prisma.workoutTemplateExercise.deleteMany({ where: { template_id: id } });
-      if (exercises.length > 0) {
-        await prisma.workoutTemplateExercise.createMany({
-          data: exercises.map((e, i) => ({
-            template_id: id,
-            exercise_id: e.exercise_id as string,
-            block_name: (e.block_name as string) ?? null,
-            order_index: i,
-            sets: (e.sets as number) ?? null,
-            reps: (e.reps as number) ?? null,
-            target_weight: (e.target_weight as number) ?? null,
-            rest_seconds: (e.rest_seconds as number) ?? null,
-            notes: (e.notes as string) ?? null,
-          })),
-        });
-      }
+      await prisma.$transaction(async (tx) => {
+        await tx.workoutTemplateExercise.deleteMany({ where: { template_id: id } });
+        if (exercises.length > 0) {
+          await tx.workoutTemplateExercise.createMany({
+            data: exercises.map((e, i) => ({
+              template_id: id,
+              exercise_id: e.exercise_id as string,
+              block_name: (e.block_name as string) ?? null,
+              order_index: i,
+              sets: (e.sets as number) ?? null,
+              reps: (e.reps as number) ?? null,
+              target_weight: (e.target_weight as number) ?? null,
+              rest_seconds: (e.rest_seconds as number) ?? null,
+              notes: (e.notes as string) ?? null,
+            })),
+          });
+        }
+      });
     }
     return { success: true, id, name: tplName ?? template.name };
   }
@@ -241,22 +243,24 @@ async function executeTool(name: string, input: ToolInput): Promise<unknown> {
     });
 
     if (exercises !== undefined) {
-      await prisma.workoutPlanExercise.deleteMany({ where: { workout_plan_id: id } });
-      if (exercises.length > 0) {
-        await prisma.workoutPlanExercise.createMany({
-          data: exercises.map((e, i) => ({
-            workout_plan_id: id,
-            exercise_id: e.exercise_id as string,
-            block_name: (e.block_name as string) ?? null,
-            order_index: i,
-            sets: (e.sets as number) ?? null,
-            reps: (e.reps as number) ?? null,
-            target_weight: (e.target_weight as number) ?? null,
-            rest_seconds: (e.rest_seconds as number) ?? null,
-            notes: (e.notes as string) ?? null,
-          })),
-        });
-      }
+      await prisma.$transaction(async (tx) => {
+        await tx.workoutPlanExercise.deleteMany({ where: { workout_plan_id: id } });
+        if (exercises.length > 0) {
+          await tx.workoutPlanExercise.createMany({
+            data: exercises.map((e, i) => ({
+              workout_plan_id: id,
+              exercise_id: e.exercise_id as string,
+              block_name: (e.block_name as string) ?? null,
+              order_index: i,
+              sets: (e.sets as number) ?? null,
+              reps: (e.reps as number) ?? null,
+              target_weight: (e.target_weight as number) ?? null,
+              rest_seconds: (e.rest_seconds as number) ?? null,
+              notes: (e.notes as string) ?? null,
+            })),
+          });
+        }
+      });
     }
     return { success: true, id, date: planDateStr };
   }
@@ -396,14 +400,18 @@ export async function POST(req: NextRequest) {
 
   const systemPrompt = `You are a personal fitness coach AI. You can analyze the user's workout history and goals, provide recommendations, AND create or update workout templates, workout plans, and mesocycles on demand using your available tools.
 
-When the user asks you to create or update something (a template, workout plan, or mesocycle), use the appropriate tool. Always call list_exercises first to get valid exercise IDs. To update an existing template, call list_templates first to get the ID. To update an existing workout plan, call list_workout_plans first. Today's date is ${today}.
+TOOL CALLING RULES — follow these strictly:
+1. ALWAYS call list_exercises before any create or update that includes exercises. The exercise IDs in the result are the only valid IDs — never invent or guess them.
+2. ALWAYS call list_templates before update_template to get the real template IDs.
+3. ALWAYS call list_workout_plans before update_workout_plan to get the real plan IDs.
+4. When updating multiple templates or plans, update them ONE AT A TIME in separate tool calls, not all in the same response. Wait for each result before calling the next.
+5. Never create or modify anything for a past date.
+6. Workout plans may only be created or updated for today or future dates.
+7. Never modify a workout plan that has already been completed (status = done) — completed workouts are read-only.
+8. Never attempt to alter, overwrite, or delete existing workout history (WorkoutSession records) — that data is read-only and must be preserved.
+9. Templates are always editable regardless of date.
 
-IMPORTANT RULES:
-- Never create or modify anything for a past date.
-- Workout plans may only be created or updated for today or future dates.
-- Never modify a workout plan that has already been completed (status = done) — completed workouts are read-only.
-- Never attempt to alter, overwrite, or delete existing workout history (WorkoutSession records) — that data is read-only and must be preserved.
-- Templates are always editable regardless of date.
+Today's date is ${today}.
 
 When not creating something, provide specific, actionable recommendations. Be encouraging and practical. Format responses with clear sections using markdown.
 
@@ -443,7 +451,11 @@ ${serializedSessions.map(s => `
         const messages: Anthropic.MessageParam[] = [...claudeMessages];
 
         while (loopCount++ < 15) {
-          const claudeStream = anthropic.messages.stream({
+          if (loopCount > 1) {
+            emit('\n_Procesando..._\n\n');
+          }
+
+          const response = await anthropic.messages.create({
             model: 'claude-sonnet-4-6',
             max_tokens: 4096,
             system: systemPrompt,
@@ -451,9 +463,11 @@ ${serializedSessions.map(s => `
             messages,
           });
 
-          claudeStream.on('text', (text) => emit(text));
-
-          const response = await claudeStream.finalMessage();
+          for (const block of response.content) {
+            if (block.type === 'text' && block.text) {
+              emit(block.text);
+            }
+          }
 
           if (response.stop_reason !== 'tool_use') break;
 
@@ -507,11 +521,14 @@ ${serializedSessions.map(s => `
                 content: JSON.stringify(result),
               });
             } catch (err) {
+              const errMsg = err instanceof Error ? err.message : 'Error desconocido';
+              console.error(`[AI Tool Error] ${toolUse.name}:`, err);
+              emit(`\n⚠️ Error en ${toolUse.name}: ${errMsg}\n\n`);
               toolResults.push({
                 type: 'tool_result',
                 tool_use_id: toolUse.id,
                 is_error: true,
-                content: err instanceof Error ? err.message : 'Tool execution failed',
+                content: errMsg,
               });
             }
           }
@@ -524,6 +541,7 @@ ${serializedSessions.map(s => `
         }
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'AI error';
+        console.error('[AI Route Error]', err);
         emit(`\n\n**Error:** ${msg}`);
       } finally {
         controller.close();
