@@ -341,7 +341,7 @@ export function CircuitExerciseCard({
             </div>
           )}
 
-          {planExercise.rest_seconds && !showCompleteForm && (
+          {!!planExercise.rest_seconds && !showCompleteForm && (
             <p className="text-xs text-slate-400">Descanso: {planExercise.rest_seconds}s después</p>
           )}
         </div>
