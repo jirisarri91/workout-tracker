@@ -12,7 +12,8 @@ interface Props {
   onUpdated: () => void;
   suggestions: Record<string, ProgressSuggestion>;
   setsDone: Record<string, number>;
-  onSetComplete: (planExerciseId: string) => void;
+  onExerciseDone: (planExerciseId: string) => void;
+  onUndoExercise: (planExerciseId: string) => void;
   onNext: () => void;
   isLastBlock: boolean;
 }
@@ -27,7 +28,8 @@ export function ActiveBlockView({
   onUpdated,
   suggestions,
   setsDone,
-  onSetComplete,
+  onExerciseDone,
+  onUndoExercise,
   onNext,
   isLastBlock,
 }: Props) {
@@ -35,29 +37,9 @@ export function ActiveBlockView({
     return sessionExercises.find(se => se.workout_plan_exercise_id === planExId) ?? null;
   }
 
-  const isCircuit = exercises.length > 1;
-
-  // Derive round info for circuit blocks
-  const setsPerEx = exercises.map(ex => ({
-    id: ex.id,
-    done: Math.min(setsDone[ex.id] ?? 0, ex.sets ?? 1),
-    total: ex.sets ?? 1,
-    skipped: getSessionExercise(ex.id)?.status === 'not_done',
-  }));
-
-  const activeExercises = setsPerEx.filter(e => !e.skipped);
-  const minSetsDone = activeExercises.length > 0
-    ? Math.min(...activeExercises.map(e => e.done))
-    : 0;
-  const maxSets = exercises.length > 0
-    ? Math.max(...exercises.map(ex => ex.sets ?? 1))
-    : 1;
-
-  const currentRound = Math.min(minSetsDone + 1, maxSets);
-
   const blockDone = exercises.every(ex => {
     const se = getSessionExercise(ex.id);
-    if (se?.status === 'not_done') return true; // skipped counts as "resolved"
+    if (se?.status === 'not_done') return true;
     return (setsDone[ex.id] ?? 0) >= (ex.sets ?? 1);
   });
 
@@ -68,12 +50,6 @@ export function ActiveBlockView({
         <div>
           {blockName && (
             <h2 className="font-bold text-slate-900 text-base">{blockName}</h2>
-          )}
-          {isCircuit && !blockDone && (
-            <p className="text-sm text-slate-500 mt-0.5">
-              Ronda {currentRound} de {maxSets}
-              <span className="ml-2 text-slate-400">· hacé cada ejercicio, luego repetí</span>
-            </p>
           )}
         </div>
         {blockDone && (
@@ -90,26 +66,21 @@ export function ActiveBlockView({
           const total = planEx.sets ?? 1;
           const se = getSessionExercise(planEx.id);
 
-          // Highlight the current exercise in circuit mode:
-          // first exercise that hasn't completed the current round
-          const isDoneThisRound = done > minSetsDone || done >= total || se?.status === 'not_done';
-          const isCurrentFocus = isCircuit && !blockDone && !isDoneThisRound;
-
           return (
-            <div key={planEx.id} className={isCurrentFocus ? 'ring-2 ring-orange-400 ring-offset-2 rounded-2xl' : ''}>
-              <CircuitExerciseCard
-                planExercise={planEx}
-                sessionExercise={se}
-                allExercises={allExercises}
-                sessionId={sessionId}
-                onEnsureSession={onEnsureSession}
-                onUpdated={onUpdated}
-                suggestion={suggestions[planEx.exercise_id]}
-                setsDone={done}
-                totalSets={total}
-                onSetComplete={() => onSetComplete(planEx.id)}
-              />
-            </div>
+            <CircuitExerciseCard
+              key={planEx.id}
+              planExercise={planEx}
+              sessionExercise={se}
+              allExercises={allExercises}
+              sessionId={sessionId}
+              onEnsureSession={onEnsureSession}
+              onUpdated={onUpdated}
+              suggestion={suggestions[planEx.exercise_id]}
+              setsDone={done}
+              totalSets={total}
+              onExerciseDone={() => onExerciseDone(planEx.id)}
+              onUndoExercise={() => onUndoExercise(planEx.id)}
+            />
           );
         })}
       </div>

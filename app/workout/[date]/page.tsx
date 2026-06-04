@@ -9,6 +9,7 @@ import { WorkoutHeader } from '@/components/workout/WorkoutHeader';
 import { BlockMinimap, BlockChipData } from '@/components/workout/BlockMinimap';
 import { ActiveBlockView } from '@/components/workout/ActiveBlockView';
 import { SessionSummary } from '@/components/workout/SessionSummary';
+import { WorkoutAIChat } from '@/components/workout/WorkoutAIChat';
 import { PageSpinner } from '@/components/ui/Spinner';
 import { Button } from '@/components/ui/Button';
 import { WorkoutPlanExercise, WorkoutSessionExercise, ProgressSuggestion } from '@/types';
@@ -24,7 +25,6 @@ function buildBlocks(planExercises: WorkoutPlanExercise[]) {
   return Array.from(blockMap.entries()).map(([name, exercises]) => ({ name, exercises }));
 }
 
-// Compact row used in the full-plan review drawer
 function FullPlanRow({ planEx, se }: { planEx: WorkoutPlanExercise; se: WorkoutSessionExercise | null }) {
   const name = se?.replaced_exercise?.name ?? planEx.exercise?.name ?? '…';
   const isDone = se?.status === 'done';
@@ -39,9 +39,6 @@ function FullPlanRow({ planEx, se }: { planEx: WorkoutPlanExercise; se: WorkoutS
       <span className="text-sm text-slate-800 flex-1 truncate">{name}</span>
       {planEx.sets && planEx.reps && (
         <span className="text-xs text-slate-400 shrink-0">{planEx.sets}×{planEx.reps}</span>
-      )}
-      {planEx.target_weight && (
-        <span className="text-xs text-slate-400 shrink-0">{planEx.target_weight}kg</span>
       )}
     </div>
   );
@@ -105,7 +102,6 @@ export default function WorkoutPage({ params }: { params: Promise<{ date: string
       !b.exercises.every(ex => {
         const se = ses.find(s => s.workout_plan_exercise_id === ex.id);
         if (se?.status === 'not_done') return true;
-        // Read from localStorage directly since setsDone state may not be synced yet
         const localSets = (() => {
           try { return (JSON.parse(localStorage.getItem(lsKey) ?? '{}') as Record<string, number>)[ex.id] ?? 0; }
           catch { return 0; }
@@ -114,7 +110,6 @@ export default function WorkoutPage({ params }: { params: Promise<{ date: string
       })
     );
     if (firstIncomplete >= 0) setActiveBlockIndex(firstIncomplete);
-  // Only run once after initial data load
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadingPlan, loadingSession]);
 
@@ -130,7 +125,6 @@ export default function WorkoutPage({ params }: { params: Promise<{ date: string
   useEffect(() => {
     const prev = prevSessionStatus.current;
     prevSessionStatus.current = session?.status;
-    // Only auto-show summary when status transitions TO done during this session, not on initial load
     if (session?.status === 'done' && prev !== undefined && prev !== 'done' && (session.exercises?.length ?? 0) > 0) {
       setShowSummary(true);
     }
@@ -169,49 +163,29 @@ export default function WorkoutPage({ params }: { params: Promise<{ date: string
     }).length,
   }));
 
-  async function handleSetComplete(planExId: string) {
+  function handleExerciseDone(planExId: string) {
     const planEx = planExercises.find(e => e.id === planExId);
     if (!planEx) return;
-
-    const current = setsDone[planExId] ?? 0;
-    const newCount = current + 1;
-
-    const updated = { ...setsDone, [planExId]: newCount };
+    const updated = { ...setsDone, [planExId]: planEx.sets ?? 1 };
     setSetsDone(updated);
     localStorage.setItem(lsKey, JSON.stringify(updated));
+  }
 
-    if (newCount >= (planEx.sets ?? 1)) {
-      try {
-        const sid = session?.id ?? await ensureSession();
-        const se = getSessionExercise(planExId);
-        if (se) {
-          await fetch(`/api/workout-sessions/${sid}/exercises/${se.id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: 'done' }),
-          });
-        } else {
-          await fetch(`/api/workout-sessions/${sid}/exercises`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              workout_session_id: sid,
-              workout_plan_exercise_id: planExId,
-              exercise_id: planEx.exercise_id,
-              order_index: planEx.order_index,
-              sets: planEx.sets,
-              reps: planEx.reps,
-              status: 'done',
-            }),
-          });
-        }
-        mutateSession();
-      } catch { /* silent — local state is correct */ }
-    }
+  function handleUndoExercise(planExId: string) {
+    const updated = { ...setsDone, [planExId]: 0 };
+    setSetsDone(updated);
+    localStorage.setItem(lsKey, JSON.stringify(updated));
   }
 
   const activeBlock = blocks[activeBlockIndex];
   const displayDate = format(parseISO(date), 'EEEE, MMM d');
+
+  // Build a short context hint for the AI chat
+  const aiContextHint = plan ? [
+    plan.name && `Entreno: ${plan.name}`,
+    plan.objective && `Objetivo: ${plan.objective}`,
+    planExercises.length > 0 && `Ejercicios: ${planExercises.map(e => e.exercise?.name).filter(Boolean).join(', ')}`,
+  ].filter(Boolean).join('. ') : undefined;
 
   return (
     <div className="flex flex-col gap-4">
@@ -227,6 +201,7 @@ export default function WorkoutPage({ params }: { params: Promise<{ date: string
         session={session}
         planName={plan?.name}
         planObjective={plan?.objective}
+        planNotes={plan?.notes}
         onSessionUpdated={refresh}
       />
 
@@ -239,7 +214,6 @@ export default function WorkoutPage({ params }: { params: Promise<{ date: string
         </div>
       ) : (
         <>
-          {/* Block minimap — shown when there are named blocks or multiple blocks */}
           {(blocks.length > 1 || blocks[0]?.name) && (
             <BlockMinimap
               blocks={minimapBlocks}
@@ -248,7 +222,6 @@ export default function WorkoutPage({ params }: { params: Promise<{ date: string
             />
           )}
 
-          {/* Focused active-block view */}
           {activeBlock && (
             <ActiveBlockView
               blockName={activeBlock.name}
@@ -260,11 +233,15 @@ export default function WorkoutPage({ params }: { params: Promise<{ date: string
               onUpdated={refresh}
               suggestions={suggestions}
               setsDone={setsDone}
-              onSetComplete={handleSetComplete}
+              onExerciseDone={handleExerciseDone}
+              onUndoExercise={handleUndoExercise}
               onNext={() => setActiveBlockIndex(i => Math.min(i + 1, blocks.length - 1))}
               isLastBlock={activeBlockIndex === blocks.length - 1}
             />
           )}
+
+          {/* AI Chat */}
+          <WorkoutAIChat contextHint={aiContextHint} />
 
           {/* Full plan review */}
           <button

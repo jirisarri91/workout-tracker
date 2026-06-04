@@ -124,6 +124,7 @@ export interface ProgressSuggestion {
   lastWeight: number | null;
   suggestedWeight: number | null;
   lastDate: string | null;
+  lastDuration: number | null;
 }
 
 export interface WorkoutTemplate {

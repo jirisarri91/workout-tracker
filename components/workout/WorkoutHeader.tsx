@@ -11,21 +11,44 @@ interface Props {
   session: WorkoutSession | null | undefined;
   planObjective?: string | null;
   planName?: string | null;
+  planNotes?: string | null;
   onSessionUpdated: () => void;
 }
 
-export function WorkoutHeader({ date, session, planObjective, planName, onSessionUpdated }: Props) {
+function toTimeInput(iso: string | null | undefined): string {
+  if (!iso) return '';
+  try {
+    return format(parseISO(iso), 'HH:mm');
+  } catch {
+    return '';
+  }
+}
+
+function applyTimeToDate(dateStr: string, timeStr: string): string {
+  const [h, m] = timeStr.split(':').map(Number);
+  const d = parseISO(dateStr);
+  d.setHours(h, m, 0, 0);
+  return d.toISOString();
+}
+
+export function WorkoutHeader({ date, session, planObjective, planName, planNotes, onSessionUpdated }: Props) {
   const [elapsed, setElapsed] = useState(0);
   const [running, setRunning] = useState(false);
   const [notes, setNotes] = useState(session?.notes ?? '');
   const [saving, setSaving] = useState(false);
   const [confirmDeleteSession, setConfirmDeleteSession] = useState(false);
   const [deletingSession, setDeletingSession] = useState(false);
+  const [editingStart, setEditingStart] = useState(false);
+  const [editingEnd, setEditingEnd] = useState(false);
+  const [startTimeVal, setStartTimeVal] = useState(toTimeInput(session?.actual_start_time));
+  const [endTimeVal, setEndTimeVal] = useState(toTimeInput(session?.actual_end_time));
   const { toast } = useToast();
   const notesTimeout = { current: null as ReturnType<typeof setTimeout> | null };
 
   useEffect(() => {
     setNotes(session?.notes ?? '');
+    setStartTimeVal(toTimeInput(session?.actual_start_time));
+    setEndTimeVal(toTimeInput(session?.actual_end_time));
     if (session?.actual_start_time && !session.actual_end_time) {
       setRunning(true);
       const start = parseISO(session.actual_start_time);
@@ -83,6 +106,30 @@ export function WorkoutHeader({ date, session, planObjective, planName, onSessio
     finally { setSaving(false); }
   }
 
+  async function saveStartTime(val: string) {
+    if (!session || !val) return;
+    try {
+      await fetch(`/api/workout-sessions/${session.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ actual_start_time: applyTimeToDate(date, val) }),
+      });
+      onSessionUpdated();
+    } catch { toast('Error al guardar hora', 'error'); }
+  }
+
+  async function saveEndTime(val: string) {
+    if (!session || !val) return;
+    try {
+      await fetch(`/api/workout-sessions/${session.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ actual_end_time: applyTimeToDate(date, val) }),
+      });
+      onSessionUpdated();
+    } catch { toast('Error al guardar hora', 'error'); }
+  }
+
   async function deleteSession() {
     if (!session) return;
     setDeletingSession(true);
@@ -120,6 +167,9 @@ export function WorkoutHeader({ date, session, planObjective, planName, onSessio
           {planObjective && (
             <p className="text-sm text-slate-500 mt-1 line-clamp-2">{planObjective}</p>
           )}
+          {planNotes && (
+            <p className="text-xs text-slate-400 mt-1 whitespace-pre-wrap">{planNotes}</p>
+          )}
         </div>
 
         {/* Timer */}
@@ -147,7 +197,57 @@ export function WorkoutHeader({ date, session, planObjective, planName, onSessio
         </div>
       </div>
 
-      {/* Notes */}
+      {/* Editable start/end times */}
+      {session && (started || finished) && (
+        <div className="mt-3 flex items-center gap-4 text-xs">
+          <div className="flex items-center gap-1.5">
+            <span className="text-slate-400">Inicio:</span>
+            {editingStart ? (
+              <input
+                type="time"
+                value={startTimeVal}
+                autoFocus
+                className="border border-slate-200 rounded px-1.5 py-0.5 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-orange-300"
+                onChange={e => setStartTimeVal(e.target.value)}
+                onBlur={e => { saveStartTime(e.target.value); setEditingStart(false); }}
+                onKeyDown={e => { if (e.key === 'Enter') { saveStartTime(startTimeVal); setEditingStart(false); } if (e.key === 'Escape') setEditingStart(false); }}
+              />
+            ) : (
+              <button
+                onClick={() => setEditingStart(true)}
+                className="font-medium text-slate-600 hover:text-orange-500 underline-offset-2 hover:underline transition-colors"
+              >
+                {startTimeVal || '—'}
+              </button>
+            )}
+          </div>
+          {finished && (
+            <div className="flex items-center gap-1.5">
+              <span className="text-slate-400">Fin:</span>
+              {editingEnd ? (
+                <input
+                  type="time"
+                  value={endTimeVal}
+                  autoFocus
+                  className="border border-slate-200 rounded px-1.5 py-0.5 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-orange-300"
+                  onChange={e => setEndTimeVal(e.target.value)}
+                  onBlur={e => { saveEndTime(e.target.value); setEditingEnd(false); }}
+                  onKeyDown={e => { if (e.key === 'Enter') { saveEndTime(endTimeVal); setEditingEnd(false); } if (e.key === 'Escape') setEditingEnd(false); }}
+                />
+              ) : (
+                <button
+                  onClick={() => setEditingEnd(true)}
+                  className="font-medium text-slate-600 hover:text-orange-500 underline-offset-2 hover:underline transition-colors"
+                >
+                  {endTimeVal || '—'}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Session notes */}
       <div className="mt-3">
         <Textarea
           placeholder="Notas de la sesión..."

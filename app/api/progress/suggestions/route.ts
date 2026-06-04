@@ -11,24 +11,38 @@ export async function GET(req: NextRequest) {
 
   const results = await Promise.all(
     exerciseIds.map(async (exerciseId): Promise<ProgressSuggestion> => {
-      const last = await prisma.workoutSessionExercise.findFirst({
-        where: { exercise_id: exerciseId, status: { not: 'not_done' }, actual_weight: { not: null } },
-        include: { workout_session: { select: { date: true } } },
-        orderBy: { workout_session: { date: 'desc' } },
-      });
+      const [lastWithWeight, lastWithDuration] = await Promise.all([
+        prisma.workoutSessionExercise.findFirst({
+          where: { exercise_id: exerciseId, status: { not: 'not_done' }, actual_weight: { not: null } },
+          include: { workout_session: { select: { date: true } } },
+          orderBy: { workout_session: { date: 'desc' } },
+        }),
+        prisma.workoutSessionExercise.findFirst({
+          where: { exercise_id: exerciseId, status: { not: 'not_done' }, duration_seconds: { not: null } },
+          include: { workout_session: { select: { date: true } } },
+          orderBy: { workout_session: { date: 'desc' } },
+        }),
+      ]);
 
-      if (!last || !last.actual_weight) {
-        return { exerciseId, lastWeight: null, suggestedWeight: null, lastDate: null };
+      if (!lastWithWeight || !lastWithWeight.actual_weight) {
+        return {
+          exerciseId,
+          lastWeight: null,
+          suggestedWeight: null,
+          lastDate: null,
+          lastDuration: lastWithDuration?.duration_seconds ? Number(lastWithDuration.duration_seconds) : null,
+        };
       }
 
-      const lastWeight = Number(last.actual_weight);
+      const lastWeight = Number(lastWithWeight.actual_weight);
       const suggestedWeight = Math.round(lastWeight * 1.05 * 2) / 2;
 
       return {
         exerciseId,
         lastWeight,
         suggestedWeight,
-        lastDate: last.workout_session.date.toISOString().split('T')[0],
+        lastDate: lastWithWeight.workout_session.date.toISOString().split('T')[0],
+        lastDuration: lastWithDuration?.duration_seconds ? Number(lastWithDuration.duration_seconds) : null,
       };
     })
   );
