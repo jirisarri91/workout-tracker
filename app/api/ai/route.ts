@@ -404,7 +404,7 @@ TOOL CALLING RULES — follow these strictly:
 1. ALWAYS call list_exercises before any create or update that includes exercises. The exercise IDs in the result are the only valid IDs — never invent or guess them.
 2. ALWAYS call list_templates before update_template to get the real template IDs.
 3. ALWAYS call list_workout_plans before update_workout_plan to get the real plan IDs.
-4. When updating multiple templates or plans, update them ONE AT A TIME in separate tool calls, not all in the same response. Wait for each result before calling the next.
+4. When creating OR updating multiple templates or plans, do them ONE AT A TIME — one tool call per response turn. Wait for each result before calling the next. Never batch multiple create_template or create_workout_plan calls in a single response.
 5. Never create or modify anything for a past date.
 6. Workout plans may only be created or updated for today or future dates.
 7. Never modify a workout plan that has already been completed (status = done) — completed workouts are read-only.
@@ -457,7 +457,7 @@ ${serializedSessions.map(s => `
 
           const response = await anthropic.messages.create({
             model: 'claude-sonnet-4-6',
-            max_tokens: 4096,
+            max_tokens: 8192,
             system: systemPrompt,
             tools,
             messages,
